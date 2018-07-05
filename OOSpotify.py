@@ -12,10 +12,6 @@ import os
 import time
 from operator import itemgetter
 
-os.environ['SPOTIPY_CLIENT_ID'] = '0dd677ab735f4fd1b9dbf6b236350ba1'#'32b098e058c547168c94a4fdc5dfeeba'
-os.environ['SPOTIPY_CLIENT_SECRET'] = 'bbe8736a14ba4e64bfb2d4103c8957aa'#'fb1b59216a104af69e004a30fb535612'
-os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
-
 
 #UserID:
 users = {}
