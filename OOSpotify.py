@@ -83,6 +83,37 @@ class SpotifyObj(object):
 class Artist(SpotifyObj):
     '''
     Artist class for OOSpotify. Inherits functionality from the SpotifyObj Class.
+    
+    The methods are split into two types: functional and printing. The former return an object or list of 
+    SpotifyObj objects, which can then have their corresponding methods called. The latter are just for viewing 
+    purposes and get printed to the console.
+    
+    For example, if you wanted to see all of alt-J's albums, you'd use the Albums() printing method: 
+    Artist('alt-J').Albums(). This prints out a list in descending chronological order of their albums with the 
+    respective release dates. If you then wanted to find out the track names for their oldest album,
+    you could call the getAlbums() functional method: oldest_album = Artist('alt-J').getAlbums()[-1]. 
+    oldest_album is now an object of class Album, which means that you can use the Album methods on it (again, either 
+    functional or printing) like so: oldest_album.Tracks(). This prints out all of the track names for the oldest 
+    album. Fun stuff!
+    
+    Here are all of the methods (the names should hopefully be sufficiently self-explanatory):
+    
+    Functional Methods:
+        getTopTracks()
+        getRelatedArtists()
+        getAlbums()
+        getLatestAlbum()
+        getAlbumsBefore(year)
+        getAlbumsAfter(year)
+    
+    Printing Methods:
+        TopTracks()
+        RelatedArtist()
+        Albums()
+        LatestAlbum()
+        AlbumsBefore(year)
+        AlbumsAfter(year)
+    ----------------------------------
     '''
     def __init__(self,name=None,ID=None,artistDict=None):
         self.type = 'artist'
@@ -167,6 +198,17 @@ class Artist(SpotifyObj):
 class Album(SpotifyObj):
     '''
     Album class for OOSpotify. Inherits functionality from the SpotifyObj Class.
+    
+    Here are all of the methods (the names should hopefully be sufficiently self-explanatory):
+    
+    Functional Methods:
+        getTracks()
+        dateStruct()
+    
+    Printing Methods:
+        Tracks()
+        AvgFeatures()
+    ----------------------------------
     '''
     def __init__(self,name=None,ID=None,albumDict=None):
         self.type = 'album'
@@ -225,6 +267,16 @@ class Album(SpotifyObj):
 class Track(SpotifyObj):
     '''
     Track class for OOSpotify. Inherits functionality from the SpotifyObj Class.
+    
+    Functional Methods:
+        getAudioAnalysis()
+        getCodestring()
+        getEchoprintstring()
+        getArtists()
+        getArtist()
+        getAlbum()
+    
+    ----------------------------------
     '''
     def __init__(self,name=None,ID=None,trackDict=None):
         self.type = 'track'
@@ -238,9 +290,9 @@ class Track(SpotifyObj):
             self._addAttributes(trackDict)
         else:
             raise ValueError('You have to enter either the trackID, the track name, or the track dictionary')
-        self.features = self.getFeatures()
+        self.features = self._getFeatures()
     
-    def getFeatures(self):
+    def _getFeatures(self):
         relevantFeatures = ['acousticness','danceability','energy','instrumentalness','key','liveness','loudness','mode','speechiness','tempo','time_signature','valence']
         sp = getSpotifyCreds(user,scope)
         return {key:val for key,val in sp.audio_features(self.id)[0].items() if key in relevantFeatures}
@@ -249,10 +301,10 @@ class Track(SpotifyObj):
         sp = getSpotifyCreds(user,scope)
         return sp.audio_analysis(self.id)
     
-    def codestring(self):
+    def getCodestring(self):
         return self.getAudioAnalysis()['track']['codestring']
     
-    def echoprintstring(self):
+    def getEchoprintstring(self):
         return self.getAudioAnalysis()['track']['echoprintstring']
     
     def getArtists(self):
@@ -268,6 +320,15 @@ class Track(SpotifyObj):
 class Playlist(SpotifyObj):
     '''
     Playlist class for OOSpotify. Inherits functionality from the SpotifyObj Class.
+    
+    Here are all of the methods (the names should hopefully be sufficiently self-explanatory):
+    
+    Functional Methods:
+        getTracks()
+    
+    Printing Methods:
+        Tracks()
+    ----------------------------------
     '''
     def __init__(self,name=None,ID=None,playlistDict=None):
         self.type = 'playlist'
@@ -294,6 +355,15 @@ class Playlist(SpotifyObj):
 class User:
     '''
     User class for OOSpotify. Allows access to a user's playlists.
+    
+    Here are all of the methods (the names should hopefully be sufficiently self-explanatory):
+    
+    Functional Methods:
+        getPlaylists()
+    
+    Printing Methods:
+        Playlists()
+    ----------------------------------
     '''
     def __init__(self,ID=None):
         if ID:
