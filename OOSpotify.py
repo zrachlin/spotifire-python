@@ -101,7 +101,7 @@ class Artist(SpotifyObj):
             albums = sp.next(albums)
             albs += albums['items']
         result = albs
-        return [Album(albumDict=i) for i in result if i['album_group'] == 'album']
+        return list(set([Album(albumDict=i) for i in result if i['album_group'] == 'album']))
     def Albums(self):
         for i,album in enumerate(self.getAlbums()):
             print('{}: {}'.format(i,album.name))
@@ -113,12 +113,12 @@ class Artist(SpotifyObj):
         print('{}: {}'.format(alb.name,alb.release_date))
     def getAlbumsBefore(self,year):
         return [i for i in self.getAlbums() if i.dateStruct()<time.strptime(str(year),'%Y')]
-    def albumsBefore(self,year):
-        print([i.name for i in self.getAlbumsBefore(year)])
+    def AlbumsBefore(self,year):
+        print('\n'.join('{} - {}'.format(i.name,i.release_date) for i in self.getAlbumsBefore(year)))
     def getAlbumsAfter(self,year):
         return [i for i in self.getAlbums() if i.dateStruct()>time.strptime(str(year),'%Y')]
-    def albumsAfter(self,year):
-        print([i.name for i in self.getAlbumsAfter(year)])
+    def AlbumsAfter(self,year):
+        print('\n'.join('{} - {}'.format(i.name,i.release_date) for i in self.getAlbumsAfter(year)))
     def AvgFeatures(self):
         #averages features from top tracks. this could also be from x albums or something else
         return self.getTopTracks()
