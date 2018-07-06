@@ -17,24 +17,43 @@ from operator import itemgetter
 #client_credentials_manager = SpotifyClientCredentials()
 #sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-os.environ['SPOTIPY_CLIENT_ID'] = '0dd677ab735f4fd1b9dbf6b236350ba1'#'32b098e058c547168c94a4fdc5dfeeba'
-os.environ['SPOTIPY_CLIENT_SECRET'] = 'bbe8736a14ba4e64bfb2d4103c8957aa'#'fb1b59216a104af69e004a30fb535612'
+os.environ['SPOTIPY_CLIENT_ID'] = '0dd677ab735f4fd1b9dbf6b236350ba1'
+os.environ['SPOTIPY_CLIENT_SECRET'] = 'bbe8736a14ba4e64bfb2d4103c8957aa'
 os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
 
 #UserID:
 users = {}
 users['zach'] = str(121068889)
-scope = 'user-library-read user-read-private'
+users['eva'] = str(126233477)
+scope = 'playlist-modify-private playlist-read-private user-library-read user-library-modify'
 
 user = users['zach']
 
-def getSpotifyCreds(user,scope):
+def getSpotifyCreds(user,scope='playlist-modify-private playlist-read-private user-library-read user-library-modify'):
+    '''
+    Goes through the authorization credential flow for accessing the spotify Web API with the proper permissions (scope). 
+    This gets used frequently throughout the SpotifyObj classes in order to refresh the token during each call. This may be
+    inefficient, but it seems to be working as a way to prevent errors from token expiration during a long call to the API.
+    The alternative is to put long calls within 'try-except' blocks containing the util.prompt_for_user_token() and spotipy.Spotify() calls.
+    
+    Inputs: 
+        user - spotify userID
+        scope - permissions -> defaults are user-library-read and user-read-private, which allows access to the current users
+        private and public playlists -> see https://developer.spotify.com/documentation/general/guides/scopes/ for more info on scopes
+        
+    Output:
+        spotipy object to be used for making requests to the Spotify Web API
+    '''
     token = util.prompt_for_user_token(user,scope)
     return spotipy.Spotify(auth=token)
 
 ###############################################################################
 # Classes
 class SpotifyObj(object):
+    '''
+    Parent class for the Artist, Album, Track, and Playlist classes used in OOSpotify. 
+    Not to be instantiated itself, only used for inheritance.
+    '''
     def __init__(self):
         # The first thing that each inheriting class has to do is set the id and type to override these
         self.type = ''
@@ -62,6 +81,9 @@ class SpotifyObj(object):
                     self.__dict__[key] = val   
 
 class Artist(SpotifyObj):
+    '''
+    Artist class for OOSpotify. Inherits functionality from the SpotifyObj Class.
+    '''
     def __init__(self,name=None,ID=None,artistDict=None):
         self.type = 'artist'
         if name:
@@ -74,24 +96,28 @@ class Artist(SpotifyObj):
             self._addAttributes(artistDict)
         else:
             raise ValueError('You have to enter either the artist ID, the artist name, or the artist track dictionary')
-    #Returns a list of dictionaries of tracks
+    
     def getTopTracks(self):
-        #not implemented: country
+        #Returns a list of dictionaries of tracks
+        #not implemented: top tracks by a specific country
         sp = getSpotifyCreds(user,scope)
         result = sp.artist_top_tracks(self.id)['tracks']
         return [Track(trackDict=i) for i in result]
+    
     def TopTracks(self):
         for track in self.getTopTracks():
             print(track.name)
+    
     def getRelatedArtists(self):
         sp = getSpotifyCreds(user,scope)
         result = sp.artist_related_artists(self.id)['artists']
         return [Artist(artistDict=i) for i in result]
+    
     def RelatedArtists(self):
         for artist in self.getRelatedArtists():
             print(artist.name)
+    
     def getAlbums(self):
-        # There are sometime duplicates (like for Kanye) -> not sure why this is
         sp = getSpotifyCreds(user,scope)
         albums = sp.artist_albums(self.id,limit=50)
         albs = []
@@ -101,24 +127,35 @@ class Artist(SpotifyObj):
             albums = sp.next(albums)
             albs += albums['items']
         result = albs
+        # There are sometime duplicate albums (like for Kanye's 'Graduation') 
+        # They have different Spotify URI values, but everything else is identical
+        # list(set(x)) gets rid of some, but not all. Leaving them in for now, but look into in the future...
         return list(set([Album(albumDict=i) for i in result if i['album_group'] == 'album']))
+    
     def Albums(self):
         for i,album in enumerate(self.getAlbums()):
             print('{}: {}'.format(i,album.name))
+    
     def getLatestAlbum(self):
         dateTuple = [(i,i.dateStruct()) for i in self.getAlbums()]
         return max(dateTuple,key=itemgetter(1))[0]
+    
     def LatestAlbum(self):
         alb = self.getLatestAlbum()
         print('{}: {}'.format(alb.name,alb.release_date))
+    
     def getAlbumsBefore(self,year):
         return [i for i in self.getAlbums() if i.dateStruct()<time.strptime(str(year),'%Y')]
+    
     def AlbumsBefore(self,year):
         print('\n'.join('{} - {}'.format(i.name,i.release_date) for i in self.getAlbumsBefore(year)))
+    
     def getAlbumsAfter(self,year):
-        return [i for i in self.getAlbums() if i.dateStruct()>time.strptime(str(year),'%Y')]
+        return [i for i in self.getAlbums() if i.dateStruct()>=time.strptime(str(year),'%Y')]
+    
     def AlbumsAfter(self,year):
         print('\n'.join('{} - {}'.format(i.name,i.release_date) for i in self.getAlbumsAfter(year)))
+    
     def AvgFeatures(self):
         #averages features from top tracks. this could also be from x albums or something else
         return self.getTopTracks()
