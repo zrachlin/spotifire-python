@@ -16,7 +16,9 @@ In order to enable some of the Web API functionality, you'll need to register an
 12. In OOSpotify.py, enter the following 
 
 os.environ['SPOTIPY_CLIENT_ID'] = 'your client id'
+
 os.environ['SPOTIPY_CLIENT_SECRET'] = 'your client secret'
+
 os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
 
 OOSpotify enables you to create objects for albums, artists, tracks, users, and playlists. Each object takes care of the calls to the Spotify Web API for you and deals with all of the parsing of the returned data. This allows for simplified calls with some fun functionality.
