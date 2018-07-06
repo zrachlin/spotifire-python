@@ -105,8 +105,8 @@ class Artist(SpotifyObj):
         return [Track(trackDict=i) for i in result]
     
     def TopTracks(self):
-        for track in self.getTopTracks():
-            print(track.name)
+        for i,track in enumerate(self.getTopTracks()):
+            print(i,'--',track.name)
     
     def getRelatedArtists(self):
         sp = getSpotifyCreds(user,scope)
@@ -117,7 +117,7 @@ class Artist(SpotifyObj):
         for artist in self.getRelatedArtists():
             print(artist.name)
     
-    def getAlbums(self):
+    def getAlbums(self,desc_order=True):
         sp = getSpotifyCreds(user,scope)
         albums = sp.artist_albums(self.id,limit=50)
         albs = []
@@ -126,15 +126,19 @@ class Artist(SpotifyObj):
             sp = getSpotifyCreds(user,scope)
             albums = sp.next(albums)
             albs += albums['items']
-        result = albs
+        
         # There are sometime duplicate albums (like for Kanye's 'Graduation') 
         # They have different Spotify URI values, but everything else is identical
         # list(set(x)) gets rid of some, but not all. Leaving them in for now, but look into in the future...
-        return list(set([Album(albumDict=i) for i in result if i['album_group'] == 'album']))
-    
+        result = list(set([Album(albumDict=i) for i in albs if i['album_group'] == 'album']))
+        
+        #sort by date
+        result = sorted(result,key=lambda album: album.dateStruct(),reverse=desc_order)
+        return result
+
     def Albums(self):
         for i,album in enumerate(self.getAlbums()):
-            print('{}: {}'.format(i,album.name))
+            print('{}: {} -- {}'.format(i,album.name,album.release_date))
     
     def getLatestAlbum(self):
         dateTuple = [(i,i.dateStruct()) for i in self.getAlbums()]
