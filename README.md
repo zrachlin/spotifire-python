@@ -22,19 +22,32 @@ os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
 OOSpotify enables you to create objects for albums, artists, tracks, users, and playlists. Each object takes care of the calls to the Spotify Web API for you and deals with all of the parsing of the returned data. This allows for simplified calls with some fun functionality.
 
 Some examples:
-
+```python
+from OOSpotify import * 
 kanye = Artist('kanye west')
-
 kanye.TopTracks()
-
+```
+Returns:
+```
+0 -- All Mine
+1 -- Yikes
+2 -- Ghost Town
+3 -- Violent Crimes
+4 -- Wouldn't Leave
+5 -- I Thought About Killing You
+6 -- No Mistakes
+7 -- Lift Yourself
+8 -- Stronger
+9 -- FourFiveSeconds
+```
 For some of that #oldkanye ...
-
+```python
 kanye.AlbumsBefore(2015)
-
+```
 For some of that #newkanye ...
-
+```python
 kanye.LatestAlbum()
-
+```
 The call above just prints out the latest album but doesn't actually retain the object for the album. To get that object we can do the following ...
 
 ghosts = kanye.getLatestAlbum()
