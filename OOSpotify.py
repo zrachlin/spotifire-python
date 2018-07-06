@@ -12,15 +12,25 @@ import os
 import time
 from operator import itemgetter
 
+#alternative credential option:
+#from spotipy.oauth2 import SpotifyClientCredentials
+#client_credentials_manager = SpotifyClientCredentials()
+#sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+
+os.environ['SPOTIPY_CLIENT_ID'] = '0dd677ab735f4fd1b9dbf6b236350ba1'#'32b098e058c547168c94a4fdc5dfeeba'
+os.environ['SPOTIPY_CLIENT_SECRET'] = 'bbe8736a14ba4e64bfb2d4103c8957aa'#'fb1b59216a104af69e004a30fb535612'
+os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
 
 #UserID:
 users = {}
 users['zach'] = str(121068889)
-
 scope = 'user-library-read user-read-private'
-token = util.prompt_for_user_token(users['zach'],scope)
-sp = spotipy.Spotify(auth=token)
 
+user = users['zach']
+
+def getSpotifyCreds(user,scope):
+    token = util.prompt_for_user_token(user,scope)
+    return spotipy.Spotify(auth=token)
 
 ###############################################################################
 # Classes
@@ -30,9 +40,11 @@ class SpotifyObj(object):
         self.type = ''
         self.id = ''
     def _getID(self,name):
+        sp = getSpotifyCreds(user,scope)
         result = sp.search(q=name,type=self.type,limit=1)
         return result[self.type+'s']['items'][0]['id']
     def _getInfo(self):
+        sp = getSpotifyCreds(user,scope)
         method = getattr(sp,self.type)
         return method(self.id)
     def Attributes(self):
@@ -65,12 +77,14 @@ class Artist(SpotifyObj):
     #Returns a list of dictionaries of tracks
     def getTopTracks(self):
         #not implemented: country
+        sp = getSpotifyCreds(user,scope)
         result = sp.artist_top_tracks(self.id)['tracks']
         return [Track(trackDict=i) for i in result]
     def TopTracks(self):
         for track in self.getTopTracks():
             print(track.name)
     def getRelatedArtists(self):
+        sp = getSpotifyCreds(user,scope)
         result = sp.artist_related_artists(self.id)['artists']
         return [Artist(artistDict=i) for i in result]
     def RelatedArtists(self):
@@ -78,10 +92,12 @@ class Artist(SpotifyObj):
             print(artist.name)
     def getAlbums(self):
         # There are sometime duplicates (like for Kanye) -> not sure why this is
+        sp = getSpotifyCreds(user,scope)
         albums = sp.artist_albums(self.id,limit=50)
         albs = []
         albs += albums['items']
         while albums['next']:
+            sp = getSpotifyCreds(user,scope)
             albums = sp.next(albums)
             albs += albums['items']
         result = albs
@@ -133,10 +149,12 @@ class Album(SpotifyObj):
         return time.strptime(self.release_date,form)
     def getTracks(self):
         # Question: should track objects be added as attributes of an album? same for albums of an artist? or is that too expensive?
+        sp = getSpotifyCreds(user,scope)
         tracks = sp.album_tracks(self.id,limit=50)
         trs = []
         trs += tracks['items']
         while tracks['next']:
+            sp = getSpotifyCreds(user,scope)
             tracks = sp.next(tracks)
             trs += tracks['items']
         result = trs
@@ -172,8 +190,10 @@ class Track(SpotifyObj):
         self.features = self.getFeatures()
     def getFeatures(self):
         relevantFeatures = ['acousticness','danceability','energy','instrumentalness','key','liveness','loudness','mode','speechiness','tempo','time_signature','valence']
+        sp = getSpotifyCreds(user,scope)
         return {key:val for key,val in sp.audio_features(self.id)[0].items() if key in relevantFeatures}
     def getAudioAnalysis(self):
+        sp = getSpotifyCreds(user,scope)
         return sp.audio_analysis(self.id)
     def codestring(self):
         return self.getAudioAnalysis()['track']['codestring']
@@ -194,10 +214,12 @@ class User:
         else:
             raise ValueError('You must enter the userid')
     def getPlaylists(self):
+        sp = getSpotifyCreds(user,scope)
         playlists = sp.user_playlists(self.id,limit=50)
         pl = []
         pl += playlists['items']
         while playlists['next']:
+            sp = getSpotifyCreds(user,scope)
             playlists = sp.next(playlists)
             pl += playlists['items']
         result = pl
@@ -212,10 +234,12 @@ class Playlist(SpotifyObj):
             self._addAttributes(playlistDict)
             self.ownerid = self.owner['id']
     def getTracks(self,limit=None):
+        sp = getSpotifyCreds(user,scope)
         tracks = sp.user_playlist_tracks(user=self.ownerid,playlist_id=self.id)
         trs = []
         trs += tracks['items']
         while tracks['next']:
+            sp = getSpotifyCreds(user,scope)
             tracks = sp.next(tracks)
             trs += tracks['items']
         result = trs
