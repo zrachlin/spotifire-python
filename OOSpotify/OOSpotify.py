@@ -295,7 +295,14 @@ class Track(SpotifyObj):
     def _getFeatures(self):
         relevantFeatures = ['acousticness','danceability','energy','instrumentalness','key','liveness','loudness','mode','speechiness','tempo','time_signature','valence']
         sp = getSpotifyCreds(user,scope)
-        return {key:val for key,val in sp.audio_features(self.id)[0].items() if key in relevantFeatures}
+        
+        features = sp.audio_features(self.id)[0]
+        if features:
+            return {key:val for key,val in features.items() if key in relevantFeatures}
+        else:
+            #no features
+            return {}
+        
     
     def getAudioAnalysis(self):
         sp = getSpotifyCreds(user,scope)
