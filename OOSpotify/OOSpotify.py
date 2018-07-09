@@ -193,7 +193,16 @@ class Artist(SpotifyObj):
     
     def AvgFeatures(self):
         #averages features from top tracks. this could also be from x albums or something else
-        return self.getTopTracks()
+        features = {}
+        tracks = self.getTopTracks()
+        for track in tracks:
+            for feature,val in track.features.items():
+                if feature not in features:
+                    features[feature] = 0
+                features[feature] += float(val)
+        for feature,val in features.items():
+            features[feature] /= len(tracks)
+        return features
 
 class Album(SpotifyObj):
     '''
@@ -303,7 +312,6 @@ class Track(SpotifyObj):
             #no features
             return {}
         
-    
     def getAudioAnalysis(self):
         sp = getSpotifyCreds(user,scope)
         return sp.audio_analysis(self.id)
@@ -358,6 +366,18 @@ class Playlist(SpotifyObj):
     def Tracks(self):
         for i in self.getTracks():
             print('{}: {}'.format(i.name, i.getArtist().name))
+    
+    def AvgFeatures(self):
+        features = {}
+        tracks = self.getTracks()
+        for track in tracks:
+            for feature,val in track.features.items():
+                if feature not in features:
+                    features[feature] = 0
+                features[feature] += float(val)
+        for feature,val in features.items():
+            features[feature] /= len(tracks)
+        return features
  
 class User:
     '''

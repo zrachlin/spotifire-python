@@ -12,7 +12,7 @@ In order to enable some of the Web API functionality, you'll need to register an
 8. Click on the "Edit Settings" button
 9. Under "Redirect URIs", enter http://google.com/
 10. Click "SAVE"
-11. Click the "SHOW CLIENT SECRET" button
+11. Click the "SHOW CLIENT SECRET" button. Copy the Client ID and Client Secret.
 12. In OOSpotify.py, enter the following 
 
 os.environ['SPOTIPY_CLIENT_ID'] = 'your client id'
@@ -57,7 +57,9 @@ ghosts = kanye.getLatestAlbum()
 We used the getLatestAlbum() method from the kanye object to create an object of class Album. The ghosts object now has all of our album info.
 To check out the tracks ...
 
-ghosts.Tracks() (or kanye.getLatestAlbum().Tracks(), or Artist('kanye west').getLatestAlbum().Tracks() --> oop ftw)
+ghosts.Tracks() (or kanye.getLatestAlbum().Tracks(), or Artist('kanye west').getLatestAlbum().Tracks() --> OOP ftw)
 
 Again, this call just prints out the tracks from the album, but doesn't retain objects for each track. 
+
+There's plenty more that can be done with OOSpotify. Check out OOSpotify_Examples for an in-depth exploration.
 
