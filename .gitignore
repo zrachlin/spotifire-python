@@ -1,4 +1,6 @@
 #ignore large pickle files
+*.pyo
+*.pyc
 *.p
 __pycache__/
 .ipynb_checkpoints
