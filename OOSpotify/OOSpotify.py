@@ -261,6 +261,13 @@ class Album(SpotifyObj):
         for i,track in enumerate(self.getTracks()):
             print('{}: {}'.format(i,track.name))
     
+    def getArtists(self):
+        return [Artist(ID=i['id']) for i in self.artists]
+    
+    def getArtist(self):
+        #primary artist
+        return self.getArtists()[0]
+    
     def AvgFeatures(self):
         features = {}
         tracks = self.getTracks()
