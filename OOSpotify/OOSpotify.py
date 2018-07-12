@@ -237,7 +237,7 @@ class Album(SpotifyObj):
         self.artists = [i['name'] for i in artists]
         self.artistsIDs = [i['id'] for i in artists]
         self.artist = self.artists[0]
-        self.artistID = self.artistIDs[0]
+        self.artistID = self.artistsIDs[0]
     
     def dateStruct(self):
         if self.release_date_precision == 'day':
@@ -324,7 +324,7 @@ class Track(SpotifyObj):
         self.artists = [i['name'] for i in artists]
         self.artistsIDs = [i['id'] for i in artists]
         self.artist = self.artists[0]
-        self.artistID = self.artistIDs[0]
+        self.artistID = self.artistsIDs[0]
     
     def _getFeatures(self):
         relevantFeatures = ['acousticness','danceability','energy','instrumentalness','key','liveness','loudness','mode','speechiness','tempo','time_signature','valence']
