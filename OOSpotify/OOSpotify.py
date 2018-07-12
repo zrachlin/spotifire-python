@@ -264,9 +264,15 @@ class Album(SpotifyObj):
     def getArtists(self):
         return [Artist(ID=i['id']) for i in self.artists]
     
+    def Artists(self):
+        print('\n'.join('{}'.format(i.name) for i in self.getArtists()))
+    
     def getArtist(self):
         #primary artist
         return self.getArtists()[0]
+    
+    def Artist(self):
+        print('{}'.format(self.getArtist().name))
     
     def AvgFeatures(self):
         features = {}
@@ -332,12 +338,21 @@ class Track(SpotifyObj):
     def getArtists(self):
         return [Artist(ID=i['id']) for i in self.artists]
     
+    def Artists(self):
+        print('\n'.join('{}'.format(i.name) for i in self.getArtists()))
+    
     def getArtist(self):
         #primary artist
         return self.getArtists()[0]
     
+    def Artist(self):
+        print('{}'.format(self.getArtist().name))
+    
     def getAlbum(self):
         return Album(albumDict=self.album)
+    
+    def Album(self):
+        print('{}'.format(self.getAlbum().name))
 
 class Playlist(SpotifyObj):
     '''
@@ -402,6 +417,8 @@ class User:
     def __init__(self,ID=None):
         if ID:
             self.id = ID
+            sp = getSpotifyCreds(user,scope)
+            self.name = sp.user(self.id)['display_name']
         else:
             raise ValueError('You must enter the userid')
     def getPlaylists(self):
