@@ -23,11 +23,13 @@ os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
 
 #UserID:
 users = {}
-users['zach'] = str(121068889)
-users['eva'] = str(126233477)
+users['zach'] = '121068889'
+users['eva'] = '126233477'
+
+me = users['zach']
 scope = 'playlist-modify-private playlist-read-private user-library-read user-library-modify'
 
-user = users['zach']
+user = me
 
 def getSpotifyCreds(user,scope='playlist-modify-private playlist-read-private user-library-read user-library-modify'):
     '''
@@ -231,6 +233,11 @@ class Album(SpotifyObj):
             self._addAttributes(albumDict)
         else:
             raise ValueError('You have to enter either the album ID, the album name, or the album dictionary')
+        artists = self.artists
+        self.artists = [i['name'] for i in artists]
+        self.artistsIDs = [i['id'] for i in artists]
+        self.artist = self.artists[0]
+        self.artistID = self.artistsIDs[0]
     
     def dateStruct(self):
         if self.release_date_precision == 'day':
@@ -262,11 +269,17 @@ class Album(SpotifyObj):
             print('{}: {}'.format(i,track.name))
     
     def getArtists(self):
-        return [Artist(ID=i['id']) for i in self.artists]
+        return [Artist(ID=i) for i in self.artistsIDs]
+    
+    def Artists(self):
+        print('\n'.join('{}'.format(i) for i in self.artists))
     
     def getArtist(self):
         #primary artist
-        return self.getArtists()[0]
+        return Artist(ID=self.artistID)
+    
+    def Artist(self):
+        print('{}'.format(self.artist))
     
     def AvgFeatures(self):
         features = {}
@@ -307,6 +320,11 @@ class Track(SpotifyObj):
         else:
             raise ValueError('You have to enter either the trackID, the track name, or the track dictionary')
         self.features = self._getFeatures()
+        artists = self.artists
+        self.artists = [i['name'] for i in artists]
+        self.artistsIDs = [i['id'] for i in artists]
+        self.artist = self.artists[0]
+        self.artistID = self.artistsIDs[0]
     
     def _getFeatures(self):
         relevantFeatures = ['acousticness','danceability','energy','instrumentalness','key','liveness','loudness','mode','speechiness','tempo','time_signature','valence']
@@ -330,14 +348,23 @@ class Track(SpotifyObj):
         return self.getAudioAnalysis()['track']['echoprintstring']
     
     def getArtists(self):
-        return [Artist(ID=i['id']) for i in self.artists]
+        return [Artist(ID=i) for i in self.artistsIDs]
+    
+    def Artists(self):
+        print('\n'.join('{}'.format(i) for i in self.artists))
     
     def getArtist(self):
         #primary artist
-        return self.getArtists()[0]
+        return Artist(ID=self.artistID)
+    
+    def Artist(self):
+        print('{}'.format(self.artist))
     
     def getAlbum(self):
         return Album(albumDict=self.album)
+    
+    def Album(self):
+        print('{}'.format(self.getAlbum().name))
 
 class Playlist(SpotifyObj):
     '''
@@ -402,8 +429,11 @@ class User:
     def __init__(self,ID=None):
         if ID:
             self.id = ID
+            sp = getSpotifyCreds(user,scope)
+            self.name = sp.user(self.id)['display_name']
         else:
             raise ValueError('You must enter the userid')
+            
     def getPlaylists(self):
         sp = getSpotifyCreds(user,scope)
         playlists = sp.user_playlists(self.id,limit=50)
@@ -415,6 +445,14 @@ class User:
             pl += playlists['items']
         result = pl
         return [Playlist(playlistDict=i) for i in result]
+    
     def Playlists(self):
         for i,playlist in enumerate(self.getPlaylists()):
             print('{}: {}'.format(i,playlist.name))
+    
+    def getSavedTracks(self):
+        #only works if you are requesting your own saved tracks
+        if self.id == me:
+            sp = getSpotifyCreds(user,scope)
+            sp.current_user_saved_tracks()
+        return ''
