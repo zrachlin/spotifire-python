@@ -25,9 +25,9 @@ os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
 users = {}
 users['zach'] = '121068889'
 users['eva'] = '126233477'
-
-me = users['zach']
-scope = 'playlist-modify-private playlist-read-private user-library-read user-library-modify'
+users['eli'] = '1210409243'
+me = users['eli']
+scope = 'playlist-modify-private playlist-read-private user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing'
 
 user = me
 
@@ -138,8 +138,7 @@ class Artist(SpotifyObj):
         return [Track(trackDict=i) for i in result]
     
     def TopTracks(self):
-        for i,track in enumerate(self.getTopTracks()):
-            print(i,'--',track.name)
+        print('\n'.join('{}. {}'.format(i,j.name) for i,j in enumerate(self.getTopTracks())))
     
     def getRelatedArtists(self):
         sp = getSpotifyCreds(user,scope)
@@ -265,8 +264,7 @@ class Album(SpotifyObj):
         return [Track(trackDict=i) for i in result]
     
     def Tracks(self):
-        for i,track in enumerate(self.getTracks()):
-            print('{}: {}'.format(i,track.name))
+        print('\n'.join('{}. {} -- {}'.format(i,j.name,j.artist) for i,j in enumerate(self.getTracks())))
     
     def getArtists(self):
         return [Artist(ID=i) for i in self.artistsIDs]
@@ -398,8 +396,7 @@ class Playlist(SpotifyObj):
         return [Track(trackDict=i['track']) for i in result]
     
     def Tracks(self):
-        for i in self.getTracks():
-            print('{}: {}'.format(i.name, i.getArtist().name))
+        print('\n'.join('{}. {} -- {}'.format(i,j.name,j.artist) for i,j in enumerate(self.getTracks())))
     
     def AvgFeatures(self):
         features = {}
@@ -421,6 +418,7 @@ class User:
     
     Functional Methods:
         getPlaylists()
+        getSavedTracks() - only works if you are requesting for yourself
     
     Printing Methods:
         Playlists()
@@ -454,5 +452,17 @@ class User:
         #only works if you are requesting your own saved tracks
         if self.id == me:
             sp = getSpotifyCreds(user,scope)
-            sp.current_user_saved_tracks()
-        return ''
+            tracks = sp.current_user_saved_tracks(limit=50)
+            trs = []
+            trs += tracks['items']
+            while tracks['next']:
+                sp = getSpotifyCreds(user,scope)
+                tracks = sp.next(tracks)
+                trs += tracks['items']
+            result = trs
+            return [Track(trackDict=i['track']) for i in result]
+        else:
+            raise ValueError('You can only view your own saved tracks')
+    
+    def SavedTracks(self):
+        print('\n'.join('{}. {} -- {}'.format(i,j.name,j.artist) for i,j in enumerate(self.getSavedTracks())))
