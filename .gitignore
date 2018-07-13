@@ -5,3 +5,7 @@
 __pycache__/
 .ipynb_checkpoints
 *.cache*
+
+*.hdf5
+*.log
+*.npy
