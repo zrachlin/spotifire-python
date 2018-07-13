@@ -24,9 +24,9 @@ os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
 #UserID:
 users = {}
 users['zach'] = '121068889'
-users['eva'] = '126233477'
-users['eli'] = '1210409243'
-me = users['eli']
+#users['eva'] = '126233477'
+#users['eli'] = '1210409243'
+me = users['zach']
 scope = 'playlist-modify-private playlist-read-private user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing'
 
 user = me
