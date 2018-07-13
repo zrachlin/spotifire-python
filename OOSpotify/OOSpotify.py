@@ -159,10 +159,14 @@ class Artist(SpotifyObj):
             albums = sp.next(albums)
             albs += albums['items']
         
-        # There are sometime duplicate albums (like for Kanye's 'Graduation') 
-        # They have different Spotify URI values, but everything else is identical
-        # list(set(x)) gets rid of some, but not all. Leaving them in for now, but look into in the future...
-        result = list(set([Album(albumDict=i) for i in albs if i['album_group'] == 'album']))
+        result = []
+        #courtesy of plamere's spotipy/examples
+        unique_names = set()  # skip duplicate albums
+        for album in albs:
+            name = album['name'].lower()
+            if not name in unique_names and album['album_group'] == 'album':  
+                unique_names.add(name)
+                result.append(Album(albumDict=album))
         
         #sort by date
         result = sorted(result,key=lambda album: album.dateStruct(),reverse=desc_order)
