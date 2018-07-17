@@ -60,19 +60,24 @@ class SpotifyObj(object):
         # The first thing that each inheriting class has to do is set the id and type to override these
         self.type = ''
         self.id = ''
-    def _getID(self,name):
+    
+    def _getID(self):
         sp = getSpotifyCreds(user,scope)
-        result = sp.search(q=name,type=self.type,limit=1)
+        result = sp.search(q=self.name,type=self.type,limit=1)
         return result[self.type+'s']['items'][0]['id']
+    
     def _getInfo(self):
         sp = getSpotifyCreds(user,scope)
-        method = getattr(sp,self.type)
-        return method(self.id)
+        apiCall = getattr(sp,self.type) #makes the actual call to the Spotify Web API
+        return apiCall(self.id)
+    
     def Attributes(self):
         for i in self.__dict__.keys():
             print(i)
+    
     def _getAttributes(self):
         return [i for i in self.__dict__.keys()]
+    
     def _addAttributes(self,attDict=None):
         if attDict:
             for key,val in attDict.items():
@@ -120,7 +125,8 @@ class Artist(SpotifyObj):
     def __init__(self,name=None,ID=None,artistDict=None):
         self.type = 'artist'
         if name:
-            self.id = self._getID(name)
+            self.name = name #this will get overwritten if Spotify has a different name
+            self.id = self._getID()
             self._addAttributes()
         elif ID:
             self.id = ID
@@ -227,7 +233,8 @@ class Album(SpotifyObj):
     def __init__(self,name=None,ID=None,albumDict=None):
         self.type = 'album'
         if name:
-            self.id = self._getID(name)
+            self.name = name #this will get overwritten if Spotify has a different name
+            self.id = self._getID()
             self._addAttributes()
         elif ID:
             self.id = ID
@@ -312,7 +319,8 @@ class Track(SpotifyObj):
     def __init__(self,name=None,ID=None,trackDict=None):
         self.type = 'track'
         if name:
-            self.id = self._getID(name)
+            self.name = name #this will get overwritten if Spotify has a different name
+            self.id = self._getID()
             self._addAttributes()
         elif ID:
             self.id = ID
@@ -381,11 +389,39 @@ class Playlist(SpotifyObj):
         Tracks()
     ----------------------------------
     '''
-    def __init__(self,name=None,ID=None,playlistDict=None):
+    def __init__(self,name=None,ID=None,playlistDict=None,owner=None):
         self.type = 'playlist'
-        if playlistDict:
+        if owner:
+            self.owner = owner
+        if name:
+            self.name = name #this will get overwritten if Spotify has a different name
+            self.id = self._getID()
+            self._addAttributes()
+        elif ID:
+            self.id = ID
+            self._addAttributes()
+        elif playlistDict:
             self._addAttributes(playlistDict)
-            self.ownerid = self.owner['id']
+        else:
+            raise ValueError('You have to enter either the trackID, the track name, or the track dictionary')
+        self.ownerid = self.owner['id']
+    
+    def _getInfo(self):
+        sp = getSpotifyCreds(user,scope)
+        # This rarely works -> look into this in the future
+        if hasattr(self,'owner'):
+            playlists = sp.search(q=self.name,type=self.type,limit=50)['playlists']
+            pls = []
+            pls += playlists['items']
+            while playlists['next']:
+                sp = getSpotifyCreds(user,scope)
+                playlists = sp.next(playlists)['playlists']
+                pls += playlists['items']
+            result = [i for i in pls if i['owner']['display_name']==self.owner][0] 
+        else:
+            result = sp.search(q=self.name,type=self.type,limit=1)[self.type+'s']['items'][0]
+        
+        return result
     
     def getTracks(self,limit=None):
         sp = getSpotifyCreds(user,scope)
@@ -414,7 +450,7 @@ class Playlist(SpotifyObj):
             features[feature] /= len(tracks)
         return features
  
-class User:
+class User(object):
     '''
     User class for OOSpotify. Allows access to a user's playlists.
     
@@ -432,7 +468,8 @@ class User:
         if ID:
             self.id = ID
             sp = getSpotifyCreds(user,scope)
-            self.name = sp.user(self.id)['display_name']
+            self.userInfo = sp.user(self.id)
+            self.name = self.userInfo['display_name']
         else:
             raise ValueError('You must enter the userid')
             
