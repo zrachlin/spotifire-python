@@ -387,6 +387,8 @@ class Playlist(SpotifyObj):
     '''
     def __init__(self,name=None,ID=None,playlistDict=None,userID=None,userName=None):
         self.type = 'playlist'
+        if not any([name,ID,playlistDict]):
+            raise ValueError('You have to enter either the playlist name, the playlist ID, or the playlist dictionary')
         self.name = name
         self.id = ID
         self.playlistDict = playlistDict
@@ -394,47 +396,57 @@ class Playlist(SpotifyObj):
         self.userName = userName
         if self.name:
             if self.userID:
-                pl = [i for i in User(self.userID).getPlaylists() if i.name == self.name]
-                if pl: 
-                    if len(pl)>1:
-                        print('Multiple playlists with this name found for this userID, so returning the first result')
-                    self._addAttributes(attDict=pl[0].playlistDict)
+                # If you're searching for a popular playlist, it'll be quicker to do a regular search for the first result
+                # than to look through every one of the user's playlists for the one that matches, especially if they
+                # have a ton of playlists. For example, looking for 'the sound of drum and bass' from user 'thesoundsofspotify'
+                first_result = self._getDict()
+                if first_result['owner']['id'] == self.userID:
+                    self._addAttributes(attDict=first_result)
                 else:
-                    # No playlists with this name were found with this userID.
-                    pass
-            elif userName:
-                pass
+                    pl = [i for i in User(self.userID).getPlaylists() if i.name.lower() == self.name.lower()]
+                    if pl: 
+                        if len(pl)>1:
+                            print('Multiple playlists with this name found for this userID, so returning the first result')
+                        self._addAttributes(attDict=pl[0].playlistDict)
+                    else:
+                        print('No playlists with this name were found with this userID')
+            elif self.userName:
+                # This is a brute force search through all playlists with the same name, trying to match their owner
+                # to the provided userName. It will take a ton of time if it's a commonly named playlist. It also 
+                # doesn't work very well, so it's better to look up their userID instead.
+                # This will have to suffice until this issue gets resolved: https://github.com/spotify/web-api/issues/347
+                sp = getSpotifyCreds(user,scope)
+                playlists = sp.search(q=self.name,type=self.type,limit=50)['playlists']
+                pls = []
+                pls += playlists['items']
+                while playlists['next']:
+                    sp = getSpotifyCreds(user,scope)
+                    playlists = sp.next(playlists)['playlists']
+                    pls += playlists['items']
+                pl = [i for i in pls if i['owner']['display_name'] == self.userName.title()]
+                if pl:
+                    if len(pl)>1:
+                        print('Multiple playlists with this name found for this userName, so returning the first result')
+                    self.playlistDict = pl[0]
+                    self._addAttributes()
+                else:
+                    print('Nothing was found')
             else:
                 # No userID or userName provided, so just do a normal search and return the first result
                 self._addAttributes(attDict=None)
+                self.userID = self.owner['id']
+                self.userName = self.owner['display_name']
                
-        
-        # waiting for this issue to be resolved: https://github.com/spotify/web-api/issues/347
-        
-        elif ID:
-            self.id = ID
-            self._addAttributes()
-        elif playlistDict:
-            self._addAttributes(playlistDict)
-        else:
-            raise ValueError('You have to enter either the playlist name, the playlist ID, or the playlist dictionary')
-    
-    def _getInfo(self):
-        sp = getSpotifyCreds(user,scope)
-        # This rarely works -> look into this in the future
-        if hasattr(self,'ownerID'):
-            playlists = User(self.owner).getPlaylists()
-            pls = []
-            pls += playlists['items']
-            while playlists['next']:
+
+        elif self.id:
+            if self.userID:
                 sp = getSpotifyCreds(user,scope)
-                playlists = sp.next(playlists)['playlists']
-                pls += playlists['items']
-            result = [i for i in pls if i['owner']['display_name']==self.owner][0] 
-        else:
-            result = sp.search(q=self.name,type=self.type,limit=1)[self.type+'s']['items'][0]
-        
-        return result
+                self.playlistDict = sp.user_playlist(self.userID,self.id)
+                self._addAttributes(attDict=self.playlistDict)
+            else:
+                raise ValueError('You need the userID in addition to the playlistID')
+        elif self.playlistDict:
+            self._addAttributes(attDict=self.playlistDict)
     
     def getTracks(self,limit=None):
         sp = getSpotifyCreds(user,scope)
