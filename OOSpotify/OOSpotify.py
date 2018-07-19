@@ -27,7 +27,7 @@ users['zach'] = '121068889'
 #users['eva'] = '126233477'
 #users['eli'] = '1210409243'
 me = users['zach']
-scope = 'playlist-modify-private playlist-read-private user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing'
+scope = 'playlist-modify-private playlist-modify-public playlist-read-private user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing'
 
 user = me
 
@@ -486,8 +486,7 @@ class User(object):
         return [Playlist(playlistDict=i) for i in result]
     
     def Playlists(self):
-        for i,playlist in enumerate(self.getPlaylists()):
-            print('{}: {}'.format(i,playlist.name))
+        print('\n'.join('{}: {}'.format(i,j.name) for i,j in enumerate(self.getPlaylists())))
     
     def getSavedTracks(self):
         #only works if you are requesting your own saved tracks
@@ -507,3 +506,19 @@ class User(object):
     
     def SavedTracks(self):
         print('\n'.join('{}. {} -- {}'.format(i,j.name,j.artist) for i,j in enumerate(self.getSavedTracks())))
+    
+    def createPlaylist(self,playlistName):
+        playlists = self.getPlaylists()
+        dupPlaylists = [p for p in playlists if p.name == playlistName]
+        if dupPlaylists:
+            ans = input('Playlist with this name already exists. Do you want to overwrite it? (y/n)')
+            if ans == 'y':
+                sp = getSpotifyCreds(user,scope)
+                sp.user_playlist_replace_tracks(self.id,dupPlaylists[0].id,tracks=[])
+                return Playlist(ID=dupPlaylists[0].id)
+            else:
+                return 'Exiting ...'
+        else:
+            sp = getSpotifyCreds(user,scope)
+            plDict = sp.user_playlist_create(self.id,playlistName) #creates a new playlist and returns its dict
+            return Playlist(playlistDict = plDict)
