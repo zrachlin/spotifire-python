@@ -27,7 +27,7 @@ users['zach'] = '121068889'
 #users['eva'] = '126233477'
 #users['eli'] = '1210409243'
 me = users['zach']
-scope = 'playlist-modify-private playlist-modify-public playlist-read-private user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing'
+scope = 'playlist-modify-private playlist-modify-public playlist-read-private playlist-read-collaborative user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing'
 
 user = me
 
@@ -57,19 +57,29 @@ class SpotifyObj(object):
     Not to be instantiated itself, only used for inheritance.
     '''
     def __init__(self):
-        # The first thing that each inheriting class has to do is set the id and type to override these
+        # The first thing that each inheriting class has to do is set the id and type and name to override these
         self.type = ''
         self.id = ''
+        self.name = ''
+# Not really needed -> the sp.search returns the dictionary anyway, so removing this saves an API call
+#    def _getID(self):
+#        sp = getSpotifyCreds(user,scope)
+#        result = sp.search(q=self.name,type=self.type,limit=1)
+#        return result[self.type+'s']['items'][0]['id']
+#    
+#    def _getInfo(self):
+#            sp = getSpotifyCreds(user,scope)
+#            apiCall = getattr(sp,self.type) #makes the actual call to the Spotify Web API
+#            return apiCall(self.id)
     
-    def _getID(self):
+    def _getDict(self):
         sp = getSpotifyCreds(user,scope)
-        result = sp.search(q=self.name,type=self.type,limit=1)
-        return result[self.type+'s']['items'][0]['id']
-    
-    def _getInfo(self):
-        sp = getSpotifyCreds(user,scope)
-        apiCall = getattr(sp,self.type) #makes the actual call to the Spotify Web API
-        return apiCall(self.id)
+        if self.id:
+            apiCall = getattr(sp,self.type)
+            result = apiCall(self.id)
+        else:
+            result = sp.search(q=self.name,type=self.type,limit=1)
+        return result[self.type+'s']['items'][0]
     
     def Attributes(self):
         for i in self.__dict__.keys():
@@ -79,13 +89,11 @@ class SpotifyObj(object):
         return [i for i in self.__dict__.keys()]
     
     def _addAttributes(self,attDict=None):
-        if attDict:
-            for key,val in attDict.items():
-                self.__dict__[key] = val
-        else:
-            for key,val in self._getInfo().items():
-                if key is not 'type' and key is not 'id':
-                    self.__dict__[key] = val   
+        if not attDict:
+            attDict = self._getDict()
+            setattr(self,self.type+'Dict',attDict)
+        for key,val in attDict.items():
+            self.__dict__[key] = val  
 
 class Artist(SpotifyObj):
     '''
@@ -124,17 +132,13 @@ class Artist(SpotifyObj):
     '''
     def __init__(self,name=None,ID=None,artistDict=None):
         self.type = 'artist'
-        if name:
-            self.name = name #this will get overwritten if Spotify has a different name
-            self.id = self._getID()
-            self._addAttributes()
-        elif ID:
-            self.id = ID
-            self._addAttributes()
-        elif artistDict:
-            self._addAttributes(artistDict)
-        else:
-            raise ValueError('You have to enter either the artist ID, the artist name, or the artist track dictionary')
+        if not any([name,ID,artistDict]):
+            raise ValueError('You have to enter either the artist name, the artist ID, or the artist dictionary')
+        self.name = name
+        self.id = ID
+        self.artistDict = artistDict
+        self._addAttributes(attDict=artistDict)
+        
     
     def getTopTracks(self):
         #Returns a list of dictionaries of tracks
@@ -232,17 +236,13 @@ class Album(SpotifyObj):
     '''
     def __init__(self,name=None,ID=None,albumDict=None):
         self.type = 'album'
-        if name:
-            self.name = name #this will get overwritten if Spotify has a different name
-            self.id = self._getID()
-            self._addAttributes()
-        elif ID:
-            self.id = ID
-            self._addAttributes()
-        elif albumDict:
-            self._addAttributes(albumDict)
-        else:
-            raise ValueError('You have to enter either the album ID, the album name, or the album dictionary')
+        if not any([name,ID,albumDict]):
+            raise ValueError('You have to enter either the album name, the album ID, or the album dictionary')
+        self.name = name
+        self.id = ID
+        self.albumDict = albumDict
+        self._addAttributes(attDict=albumDict)
+        
         artists = self.artists
         self.artists = [i['name'] for i in artists]
         self.artistsIDs = [i['id'] for i in artists]
@@ -318,17 +318,13 @@ class Track(SpotifyObj):
     '''
     def __init__(self,name=None,ID=None,trackDict=None):
         self.type = 'track'
-        if name:
-            self.name = name #this will get overwritten if Spotify has a different name
-            self.id = self._getID()
-            self._addAttributes()
-        elif ID:
-            self.id = ID
-            self._addAttributes()
-        elif trackDict:
-            self._addAttributes(trackDict)
-        else:
-            raise ValueError('You have to enter either the trackID, the track name, or the track dictionary')
+        if not any([name,ID,trackDict]):
+            raise ValueError('You have to enter either the track name, the track ID, or the track dictionary')
+        self.name = name
+        self.id = ID
+        self.trackDict = trackDict
+        self._addAttributes(attDict=trackDict)
+        
         self.features = self._getFeatures()
         artists = self.artists
         self.artists = [i['name'] for i in artists]
@@ -389,28 +385,45 @@ class Playlist(SpotifyObj):
         Tracks()
     ----------------------------------
     '''
-    def __init__(self,name=None,ID=None,playlistDict=None,owner=None):
+    def __init__(self,name=None,ID=None,playlistDict=None,userID=None,userName=None):
         self.type = 'playlist'
-        if owner:
-            self.owner = owner
-        if name:
-            self.name = name #this will get overwritten if Spotify has a different name
-            self.id = self._getID()
-            self._addAttributes()
+        self.name = name
+        self.id = ID
+        self.playlistDict = playlistDict
+        self.userID = userID
+        self.userName = userName
+        if self.name:
+            if self.userID:
+                pl = [i for i in User(self.userID).getPlaylists() if i.name == self.name]
+                if pl: 
+                    if len(pl)>1:
+                        print('Multiple playlists with this name found for this userID, so returning the first result')
+                    self._addAttributes(attDict=pl[0].playlistDict)
+                else:
+                    # No playlists with this name were found with this userID.
+                    pass
+            elif userName:
+                pass
+            else:
+                # No userID or userName provided, so just do a normal search and return the first result
+                self._addAttributes(attDict=None)
+               
+        
+        # waiting for this issue to be resolved: https://github.com/spotify/web-api/issues/347
+        
         elif ID:
             self.id = ID
             self._addAttributes()
         elif playlistDict:
             self._addAttributes(playlistDict)
         else:
-            raise ValueError('You have to enter either the trackID, the track name, or the track dictionary')
-        self.ownerid = self.owner['id']
+            raise ValueError('You have to enter either the playlist name, the playlist ID, or the playlist dictionary')
     
     def _getInfo(self):
         sp = getSpotifyCreds(user,scope)
         # This rarely works -> look into this in the future
-        if hasattr(self,'owner'):
-            playlists = sp.search(q=self.name,type=self.type,limit=50)['playlists']
+        if hasattr(self,'ownerID'):
+            playlists = User(self.owner).getPlaylists()
             pls = []
             pls += playlists['items']
             while playlists['next']:
@@ -425,7 +438,7 @@ class Playlist(SpotifyObj):
     
     def getTracks(self,limit=None):
         sp = getSpotifyCreds(user,scope)
-        tracks = sp.user_playlist_tracks(user=self.ownerid,playlist_id=self.id)
+        tracks = sp.user_playlist_tracks(user=self.userID,playlist_id=self.id)
         trs = []
         trs += tracks['items']
         while tracks['next']:
@@ -449,6 +462,46 @@ class Playlist(SpotifyObj):
         for feature,val in features.items():
             features[feature] /= len(tracks)
         return features
+    
+    def _createPlaylist(self):
+        playlists = User(user).getPlaylists()
+        dupPlaylists = [p for p in playlists if p.name == self.name]
+        if dupPlaylists:
+            ans = input('Playlist with this name already exists. Do you want to overwrite it? (y/n)')
+            if ans == 'y':
+                sp = getSpotifyCreds(user,scope)
+                sp.user_playlist_replace_tracks(user=user,playlist_id=dupPlaylists[0].id,tracks=[])
+                return Playlist(ID=dupPlaylists[0].id)
+            else:
+                return 'Exiting ...'
+        else:
+            sp = getSpotifyCreds(user,scope)
+            plDict = sp.user_playlist_create(user=user,name=self.name) #creates a new playlist and returns its dict
+            return Playlist(playlistDict=plDict)
+        
+    def addTracks(self,SpotifyObjs):
+        trackIDs = self._extractTrackIDs(SpotifyObjs)
+        sp = getSpotifyCreds(user,scope)
+        sp.user_playlist_add_tracks(user=user,playlist_id=self.id,tracks=trackIDs)
+    
+    def _extractTrackIDs(self,SpotifyObjs):
+        if type(SpotifyObjs) is not list:
+            SpotifyObjs = [SpotifyObjs]
+        trackList = []
+        for obj in SpotifyObjs:
+            if obj.type == 'track':
+                trackList.append(obj)
+            elif obj.type == 'artist':
+                tracks = obj.getTopTracks()
+                trackList += tracks
+                print('Using top {} tracks for artist {}'.format(len(tracks),obj.name))
+            elif obj.type in ['playlist','album']:
+                tracks = obj.getTracks()
+                trackList += tracks
+            else:
+                #invalid type
+                pass
+        return [t.id for t in trackList]
  
 class User(object):
     '''
@@ -468,8 +521,8 @@ class User(object):
         if ID:
             self.id = ID
             sp = getSpotifyCreds(user,scope)
-            self.userInfo = sp.user(self.id)
-            self.name = self.userInfo['display_name']
+            self.userDict = sp.user(self.id)
+            self.name = self.userDict['display_name']
         else:
             raise ValueError('You must enter the userid')
             
@@ -507,18 +560,4 @@ class User(object):
     def SavedTracks(self):
         print('\n'.join('{}. {} -- {}'.format(i,j.name,j.artist) for i,j in enumerate(self.getSavedTracks())))
     
-    def createPlaylist(self,playlistName):
-        playlists = self.getPlaylists()
-        dupPlaylists = [p for p in playlists if p.name == playlistName]
-        if dupPlaylists:
-            ans = input('Playlist with this name already exists. Do you want to overwrite it? (y/n)')
-            if ans == 'y':
-                sp = getSpotifyCreds(user,scope)
-                sp.user_playlist_replace_tracks(self.id,dupPlaylists[0].id,tracks=[])
-                return Playlist(ID=dupPlaylists[0].id)
-            else:
-                return 'Exiting ...'
-        else:
-            sp = getSpotifyCreds(user,scope)
-            plDict = sp.user_playlist_create(self.id,playlistName) #creates a new playlist and returns its dict
-            return Playlist(playlistDict = plDict)
+    
