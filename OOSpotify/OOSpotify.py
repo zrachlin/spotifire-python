@@ -27,7 +27,7 @@ users['zach'] = '121068889'
 #users['eva'] = '126233477'
 #users['eli'] = '1210409243'
 me = users['zach']
-scope = 'playlist-modify-private playlist-modify-public playlist-read-private playlist-read-collaborative user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing'
+scope = 'playlist-modify-private playlist-modify-public playlist-read-private playlist-read-collaborative user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing user-top-read'
 
 user = me
 
@@ -474,22 +474,6 @@ class Playlist(SpotifyObj):
         for feature,val in features.items():
             features[feature] /= len(tracks)
         return features
-    
-    def _createPlaylist(self):
-        playlists = User(user).getPlaylists()
-        dupPlaylists = [p for p in playlists if p.name == self.name]
-        if dupPlaylists:
-            ans = input('Playlist with this name already exists. Do you want to overwrite it? (y/n)')
-            if ans == 'y':
-                sp = getSpotifyCreds(user,scope)
-                sp.user_playlist_replace_tracks(user=user,playlist_id=dupPlaylists[0].id,tracks=[])
-                return Playlist(ID=dupPlaylists[0].id)
-            else:
-                return 'Exiting ...'
-        else:
-            sp = getSpotifyCreds(user,scope)
-            plDict = sp.user_playlist_create(user=user,name=self.name) #creates a new playlist and returns its dict
-            return Playlist(playlistDict=plDict)
         
     def addTracks(self,SpotifyObjs):
         trackIDs = self._extractTrackIDs(SpotifyObjs)
@@ -511,9 +495,9 @@ class Playlist(SpotifyObj):
                 tracks = obj.getTracks()
                 trackList += tracks
             else:
-                #invalid type
-                pass
+                raise ValueError('{} is an invalid object class'.format(obj))
         return [t.id for t in trackList]
+    
  
 class User(object):
     '''
@@ -555,21 +539,82 @@ class User(object):
     
     def getSavedTracks(self):
         #only works if you are requesting your own saved tracks
-        if self.id == me:
-            sp = getSpotifyCreds(user,scope)
-            tracks = sp.current_user_saved_tracks(limit=50)
-            trs = []
-            trs += tracks['items']
-            while tracks['next']:
-                sp = getSpotifyCreds(user,scope)
-                tracks = sp.next(tracks)
-                trs += tracks['items']
-            result = trs
-            return [Track(trackDict=i['track']) for i in result]
-        else:
+        if self.id is not user:
             raise ValueError('You can only view your own saved tracks')
-    
+        sp = getSpotifyCreds(user,scope)
+        tracks = sp.current_user_saved_tracks(limit=50)
+        trs = []
+        trs += tracks['items']
+        while tracks['next']:
+            sp = getSpotifyCreds(user,scope)
+            tracks = sp.next(tracks)
+            trs += tracks['items']
+        result = trs
+        return [Track(trackDict=i['track']) for i in result]
+            
     def SavedTracks(self):
         print('\n'.join('{}. {} -- {}'.format(i,j.name,j.artist) for i,j in enumerate(self.getSavedTracks())))
     
+    def getTopTracks(self,limit=50,time_range='medium_term'):
+        # From Spotify Web API:
+        # time_range = Over what time frame the affinities are computed. 
+        # Valid values: 
+        # long_term (calculated from several years of data and including all new data as it becomes available), 
+        # medium_term (approximately last 6 months)
+        # short_term (approximately last 4 weeks)
+        # Default: medium_term
+        
+        if self.id is not user:
+            raise ValueError('You can only view your own top tracks')
+        sp = getSpotifyCreds(user,scope)
+        tracks = sp.current_user_top_tracks(limit=limit,time_range=time_range)['items']
+        return [Track(trackDict=i) for i in tracks]
+    
+    def TopTracks(self,limit=50,time_range='medium_term'):
+        print('\n'.join('{}. {} -- {}'.format(i,j.name,j.artist) for i,j in enumerate(self.getTopTracks(limit=limit,time_range=time_range))))
+    
+    def getTopArtists(self,limit=50,time_range='medium_term'):
+        # From Spotify Web API:
+        # time_range = Over what time frame the affinities are computed. 
+        # Valid values: 
+        # long_term (calculated from several years of data and including all new data as it becomes available), 
+        # medium_term (approximately last 6 months)
+        # short_term (approximately last 4 weeks)
+        # Default: medium_term
+        if self.id is not user:
+            raise ValueError('You can only view your own top artists')
+        sp = getSpotifyCreds(user,scope)
+        artists = sp.current_user_top_artists(limit=limit,time_range=time_range)['items']
+        return [Artist(artistDict=i) for i in artists]
+    
+    def TopArtists(self,limit=50,time_range='medium_term'):
+        print('\n'.join('{}. {}'.format(i,j.name) for i,j in enumerate(self.getTopArtists(limit=limit,time_range=time_range))))
+        
+    def createPlaylist(self,playlistName):
+        if self.id is not user:
+            raise ValueError('You can only create playlists for yourself')
+        
+        playlists = User(user).getPlaylists()
+        dupPlaylists = [p for p in playlists if p.name == playlistName]
+        if dupPlaylists:
+            ans = input('Playlist with this name already exists. Do you want to overwrite it? (y/n)')
+            if ans == 'y':
+                sp = getSpotifyCreds(user,scope)
+                sp.user_playlist_replace_tracks(user=self.id,playlist_id=dupPlaylists[0].id,tracks=[])
+                return Playlist(ID=dupPlaylists[0].id)
+            else:
+                return 'Exiting ...'
+        else:
+            sp = getSpotifyCreds(user,scope)
+            plDict = sp.user_playlist_create(user=self.id,name=playlistName) #creates a new playlist and returns its dict
+            return Playlist(playlistDict=plDict)
+
+def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],prompt=False):
+    sp = getSpotifyCreds(user,scope)
+    genreSeeds = sp.recommendation_genre_seeds()['genres']
+    invalids = '\n'.join('{} is an invalid genre'.format(g) for g in genres if g not in genreSeeds)
+    if invalids:
+        print(invalids)
+        print('Genre Options:')
+        print(genreSeeds)
     
