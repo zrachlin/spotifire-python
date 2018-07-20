@@ -9,3 +9,6 @@ __pycache__/
 *.hdf5
 *.log
 *.npy
+
+#ignore your key file
+keys.py
