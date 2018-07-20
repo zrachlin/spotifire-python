@@ -8,29 +8,18 @@ Created on Thu Jul  5 11:00:38 2018
 
 import spotipy
 import spotipy.util as util
-import os
 import time
 from operator import itemgetter
 from random import shuffle
+from keys import user
+
+scope = 'playlist-modify-private playlist-modify-public playlist-read-private playlist-read-collaborative user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing user-top-read'
 
 #alternative credential option:
 #from spotipy.oauth2 import SpotifyClientCredentials
 #client_credentials_manager = SpotifyClientCredentials()
 #sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-os.environ['SPOTIPY_CLIENT_ID'] = '0dd677ab735f4fd1b9dbf6b236350ba1'
-os.environ['SPOTIPY_CLIENT_SECRET'] = 'bbe8736a14ba4e64bfb2d4103c8957aa'
-os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
-
-#UserID:
-users = {}
-users['zach'] = '121068889'
-#users['eva'] = '126233477'
-#users['eli'] = '1210409243'
-me = users['zach']
-scope = 'playlist-modify-private playlist-modify-public playlist-read-private playlist-read-collaborative user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing user-top-read'
-
-user = me
 
 def getSpotifyCreds(user,scope='playlist-modify-private playlist-read-private user-library-read user-library-modify'):
     '''
