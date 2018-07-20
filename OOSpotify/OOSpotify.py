@@ -11,6 +11,7 @@ import spotipy.util as util
 import os
 import time
 from operator import itemgetter
+from random import shuffle
 
 #alternative credential option:
 #from spotipy.oauth2 import SpotifyClientCredentials
@@ -78,8 +79,8 @@ class SpotifyObj(object):
             apiCall = getattr(sp,self.type)
             result = apiCall(self.id)
         else:
-            result = sp.search(q=self.name,type=self.type,limit=1)
-        return result[self.type+'s']['items'][0]
+            result = sp.search(q=self.name,type=self.type,limit=1)[self.type+'s']['items'][0]
+        return result
     
     def Attributes(self):
         for i in self.__dict__.keys():
@@ -477,8 +478,12 @@ class Playlist(SpotifyObj):
         
     def addTracks(self,SpotifyObjs):
         trackIDs = self._extractTrackIDs(SpotifyObjs)
-        sp = getSpotifyCreds(user,scope)
-        sp.user_playlist_add_tracks(user=user,playlist_id=self.id,tracks=trackIDs)
+        # Split into list of lists with max length = 100 -> the API will only accept 100 at a time.
+        maxIDs = 100
+        splitTrackIDs = [trackIDs[i:i+maxIDs] for i in range(0,len(trackIDs),maxIDs)]
+        for trackIDs in splitTrackIDs:
+            sp = getSpotifyCreds(user,scope)
+            sp.user_playlist_add_tracks(user=user,playlist_id=self.id,tracks=trackIDs)
     
     def _extractTrackIDs(self,SpotifyObjs):
         if type(SpotifyObjs) is not list:
@@ -536,6 +541,13 @@ class User(object):
     
     def Playlists(self):
         print('\n'.join('{}: {}'.format(i,j.name) for i,j in enumerate(self.getPlaylists())))
+    
+    def findPlaylist(self,playlistName):
+        pls = [i for i in self.getPlaylists() if i.name.lower() == playlistName.lower()]
+        if len(pls) == 1:
+            return pls[0]
+        else:
+            return pls
     
     def getSavedTracks(self):
         #only works if you are requesting your own saved tracks
@@ -601,15 +613,31 @@ class User(object):
             if ans == 'y':
                 sp = getSpotifyCreds(user,scope)
                 sp.user_playlist_replace_tracks(user=self.id,playlist_id=dupPlaylists[0].id,tracks=[])
-                return Playlist(ID=dupPlaylists[0].id)
+                return Playlist(playlistDict=dupPlaylists[0].playlistDict)
             else:
                 return 'Exiting ...'
         else:
             sp = getSpotifyCreds(user,scope)
             plDict = sp.user_playlist_create(user=self.id,name=playlistName) #creates a new playlist and returns its dict
             return Playlist(playlistDict=plDict)
-
-def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],prompt=False):
+################################################################################################################
+# General Functions
+            
+def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],prompt=False,
+                min_acousticness = None,    max_acousticness = None,    target_acousticness = None,
+                min_danceability = None,    max_danceability = None,    target_danceability = None,
+                 min_duration_ms = None,     max_duration_ms = None,     target_duration_ms = None,
+                      min_energy = None,          max_energy = None,          target_energy = None,
+            min_instrumentalness = None,max_instrumentalness = None,target_instrumentalness = None,
+                         min_key = None,             max_key = None,             target_key = None,
+                    min_liveness = None,        max_liveness = None,        target_liveness = None,
+                    min_loudness = None,        max_loudness = None,        target_loudness = None,
+                        min_mode = None,            max_mode = None,            target_mode = None,
+                  min_popularity = None,      max_popularity = None,      target_popularity = None,
+                 min_speechiness = None,     max_speechiness = None,     target_speechiness = None,
+                       min_tempo = None,           max_tempo = None,           target_tempo = None,
+              min_time_signature = None,  max_time_signature = None,  target_time_signature = None,
+                     min_valence = None,         max_valence = None,         target_valence = None):
     sp = getSpotifyCreds(user,scope)
     genreSeeds = sp.recommendation_genre_seeds()['genres']
     invalids = '\n'.join('{} is an invalid genre'.format(g) for g in genres if g not in genreSeeds)
@@ -617,4 +645,80 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],prompt=False):
         print(invalids)
         print('Genre Options:')
         print(genreSeeds)
+        return
+    
+    seeds = []
+    seeds += [(g,'genre') for g in genres]
+    seeds += [(Artist(a).id,'artist') for a in artists]
+    seeds += [(Track(t).id,'track') for t in tracks]
+    seeds += [(t.id,'track') for t in extractTracks(SpotifyObjs)]
+    
+    # The maximum # of seeds you can send to the API for recommendations is 5. We'll split the requested
+    # seeds into groups of 5 and then combine the results later.
+    maxSeeds = 5
+    splitSeeds = [seeds[i:i+maxSeeds] for i in range(0,len(seeds),maxSeeds)] 
+    
+    rawRecTrackDicts = []
+    for seeds in splitSeeds:
+        sp = getSpotifyCreds(user,scope)
+        artists = [item[0] for item in seeds if item[1]=='artist']
+        tracks = [item[0] for item in seeds if item[1]=='track']
+        genres = [item[0] for item in seeds if item[1]=='genre']
+        recs = sp.recommendations(seed_artists = [a for a in artists],
+                                  seed_tracks  = [t for t in tracks],
+                                  seed_genres  = [g for g in genres],limit=100,
+                                  min_acousticness = min_acousticness,max_acousticness = max_acousticness,target_acousticness = target_acousticness,
+                                  min_danceability = min_danceability,max_danceability = max_danceability,target_danceability = target_danceability,
+                                   min_duration_ms = min_duration_ms,max_duration_ms = max_duration_ms,target_duration_ms = target_duration_ms,
+                                        min_energy = min_energy,max_energy = max_energy,target_energy = target_energy,
+                              min_instrumentalness = min_instrumentalness,max_instrumentalness = max_instrumentalness,target_instrumentalness = target_instrumentalness,
+                                           min_key = min_key,max_key = max_key,target_key = target_key,
+                                      min_liveness = min_liveness,max_liveness = max_liveness,target_liveness = target_liveness,
+                                      min_loudness = min_loudness,max_loudness = max_loudness,target_loudness = target_loudness,
+                                          min_mode = min_mode,max_mode = max_mode,target_mode = target_mode,
+                                    min_popularity = min_popularity,max_popularity = max_popularity,target_popularity = target_popularity,
+                                   min_speechiness = min_speechiness,max_speechiness = max_speechiness,target_speechiness = target_speechiness,
+                                         min_tempo = min_tempo,max_tempo = max_tempo,target_tempo = target_tempo,
+                                min_time_signature = min_time_signature,max_time_signature = max_time_signature,target_time_signature = target_time_signature,
+                                       min_valence = min_valence,max_valence = max_valence,target_valence = target_valence)['tracks']
+        rawRecTrackDicts += recs
+
+    # Remove Empty/Unavailable Tracks
+    # For some reason, the recommendation engine can give tracks with valid ids that aren't actually available 
+    # to play in spotify. They show up as blanks for the track name and artist name.
+    rawRecTrackDicts = [i for i in rawRecTrackDicts if i['name'] and i['artists']]
+    
+    # Remove Duplicates
+    # If there are more than 5 requested seeds there may be duplicates because 
+    # we are combining multiple sp.recommentations() calls
+    recTrackDicts = []
+    for track in rawRecTrackDicts:
+        if track not in recTrackDicts:
+            recTrackDicts.append(track)
+            
+    # Shuffle
+    shuffle(recTrackDicts)
+    
+    # Create Track Objects:
+    recTracks = [Track(trackDict=i) for i in recTrackDicts]
+    print('\n'.join('{} -- {}'.format(i.name,i.artist) for i in recTracks))
+    return recTracks
+    
+def extractTracks(SpotifyObjs):
+        if type(SpotifyObjs) is not list:
+            SpotifyObjs = [SpotifyObjs]
+        trackList = []
+        for obj in SpotifyObjs:
+            if obj.type == 'track':
+                trackList.append(obj)
+            elif obj.type == 'artist':
+                tracks = obj.getTopTracks()
+                trackList += tracks
+                print('Using top {} tracks for artist {}'.format(len(tracks),obj.name))
+            elif obj.type in ['playlist','album']:
+                tracks = obj.getTracks()
+                trackList += tracks
+            else:
+                raise ValueError('{} is an invalid object class'.format(obj))
+        return trackList
     
