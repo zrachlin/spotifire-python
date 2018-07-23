@@ -1,8 +1,8 @@
 # OOSpotify
 
 OOSpotify is an object-oriented approach to interacting with the Spotify Web API. 
-It uses Paul Lamere's spotipy (https://github.com/plamere/spotipy) as its backbone for connecting to the API and has a lot of
-similar functionality to some of spotipy's example functions (https://github.com/plamere/spotipy/tree/master/examples), but it builds in the concepts of Artist, Album, Track, Playlist and User objects for more intuitive operations. Each object takes care of the calls to the Spotify Web API for you and deals with all of the parsing of the returned data. This allows for simplified calls with some fun functionality.
+It uses Paul Lamere's [Spotipy](https://github.com/plamere/spotipy) as its backbone for connecting to the API and has a lot of
+similar functionality to some of [Spotipy's example functions](https://github.com/plamere/spotipy/tree/master/examples), but it builds in the concepts of Artist, Album, Track, Playlist and User objects for more intuitive operations. Each object takes care of the calls to the Spotify Web API for you and deals with all of the parsing of the returned data. This allows for simplified calls with some fun functionality.
 
 Some examples:
 ```python
