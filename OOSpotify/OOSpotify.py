@@ -118,6 +118,7 @@ class Artist(SpotifyObj):
         LatestAlbum()
         AlbumsBefore(year)
         AlbumsAfter(year)
+        AvgFeatures() -> calculates and prints the average feature values for the artists' top 10 tracks
     ----------------------------------
     '''
     def __init__(self,name=None,ID=None,artistDict=None):
@@ -217,11 +218,15 @@ class Album(SpotifyObj):
     
     Functional Methods:
         getTracks()
-        dateStruct()
+        dateStruct() -> converts the album release date to a time object that can be compared with other dates.
+        getArtists()
+        getArtist() -> the primary artist
     
     Printing Methods:
         Tracks()
-        AvgFeatures()
+        Artists()
+        Artist()
+        AvgFeatures() -> calculates and prints the average feature values across all of the album's tracks
     ----------------------------------
     '''
     def __init__(self,name=None,ID=None,albumDict=None):
@@ -240,6 +245,7 @@ class Album(SpotifyObj):
         self.artistID = self.artistsIDs[0]
     
     def dateStruct(self):
+        # Converts the album release date to a time object that can be compared with other dates.
         if self.release_date_precision == 'day':
             form = '%Y-%m-%d'
         elif self.release_date_precision == 'month':
@@ -303,6 +309,11 @@ class Track(SpotifyObj):
         getArtists()
         getArtist()
         getAlbum()
+        
+    Printing Methods:
+        Artists()
+        Artist() -> primary artist
+        Album()
     
     ----------------------------------
     '''
@@ -370,9 +381,11 @@ class Playlist(SpotifyObj):
     
     Functional Methods:
         getTracks()
+        addTracks()
     
     Printing Methods:
         Tracks()
+        AvgFeatures() -> calculates and prints the average feature values across all of the playlist's tracks
     ----------------------------------
     '''
     def __init__(self,name=None,ID=None,playlistDict=None,userID=None,userName=None):
@@ -501,10 +514,17 @@ class User(object):
     
     Functional Methods:
         getPlaylists()
-        getSavedTracks() - only works if you are requesting for yourself
+        getSavedTracks() -> only works if you are requesting for yourself
+        getTopTracks(limit=50,time_range='medium_term') -> only works if you are requesting for yourself
+        getTopArtists(limit=50,time_range='medium_term') -> only works if you are requesting for yourself
+        createPlaylist(playlistName) -> only works if you are requesting for yourself
     
     Printing Methods:
         Playlists()
+        SavedTracks() -> only works if you are requesting for yourself
+        TopTracks(limit=50,time_range='medium_term') -> only works if you are requesting for yourself
+        TopArtists(limit=50,time_range='medium_term') -> only works if you are requesting for yourself
+        
     ----------------------------------
     '''
     def __init__(self,ID=None):
