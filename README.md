@@ -5,6 +5,8 @@ The core of Spotifire is called OOSpotify. OOSpotify enables you to create objec
 
 Some examples:
 ```python
+import sys
+sys.path.append('../OOSpotify/')
 from OOSpotify import * 
 kanye = Artist('kanye west')
 kanye.TopTracks()
