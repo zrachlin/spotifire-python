@@ -79,7 +79,7 @@ In order to enable some of the Web API functionality, you'll need to register an
 11. Click the "SHOW CLIENT SECRET" button. Copy the Client ID and Client Secret.
 
 ### 3. Credentials
-Create a file named keys.py in the OOSpotify folder (`spotifire/OOSpotify/keys.py`) and paste in the following code and replace 'your client id' and 'your client secret' with your actual credentials from above:
+Create a file named **`keys.py`** in the OOSpotify folder (`spotifire/OOSpotify/keys.py`) and paste in the following code and replace 'your client id' and 'your client secret' with your actual credentials from above:
 
 ```python
 import os
@@ -105,7 +105,7 @@ If you don't know your Spotify User ID, here's how to find it using the mobile a
 
 <img src="https://github.com/zrachlin/spotifire/blob/master/images/Screenshot_20180722-122055_Samsung%20Notes.jpg" alt="" width="300" height="150">
 
-If you would like to be able to search for track lyrics, you'll need to set up a Genius API Client and get the access token. You can do that [here](https://genius.com/api-clients). Once you've done that, copy the access token and enter it into your keys.py file like so:
+If you would like to be able to search for track lyrics, you'll need to set up a Genius API Client and get the access token. You can do that [here](https://genius.com/api-clients). Once you've done that, copy the access token and enter it into your **`keys.py`** file like so:
 ```python
 genius_token = 'Your Genius Client Access Token'
 ```
