@@ -1,5 +1,5 @@
 # :fire: Spotifire :fire:
-This project enables musical exploration, playlist creation, and deep learning via interaction with the Spotify Web API (https://developer.spotify.com/documentation/web-api/) through the use of Paul Lamere's spotipy library (https://github.com/plamere/spotipy).
+This project enables musical exploration, playlist creation, and deep learning via interaction with the [Spotify Web API](https://developer.spotify.com/documentation/web-api/) through the use of Paul Lamere's [Spotipy](https://github.com/plamere/spotipy).
 
 The core of Spotifire is 
 
