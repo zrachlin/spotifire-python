@@ -5,11 +5,10 @@ The core of Spotifire is
 
 ## Setup 
 ### 1: Installation/Dependencies
-1. Clone this repository -> `git clone https://github.com/zrachlin/spotifire.git`
-2. Make sure you have the following packages installed:
-* [Spotipy](https://github.com/plamere/spotipy) -> `git clone https://github.com/plamere/spotipy.git` and install from source with `python setup.py install` (There are some API calls that haven't been included in the pip version yet)
+* Clone this repository -> `git clone https://github.com/zrachlin/spotifire.git`
+* Install [Spotipy](https://github.com/plamere/spotipy) -> `git clone https://github.com/plamere/spotipy.git` and install from source with `python setup.py install` (There are some API calls that haven't been included in the pip version yet)
 
-For OOSpotify, the following packages are needed. Using Anaconda (https://www.anaconda.com/download) should provide you with everything:
+For [OOSpotify](https://github.com/zrachlin/spotifire/tree/master/OOSpotify), the following packages are needed. Using Anaconda (https://www.anaconda.com/download) should provide you with everything:
 * numpy
 * pandas
 * matplotlib
