@@ -1,7 +1,35 @@
 # :fire: Spotifire :fire:
 This project enables musical exploration, playlist creation, and deep learning via interaction with the [Spotify Web API](https://developer.spotify.com/documentation/web-api/) through the use of Paul Lamere's [Spotipy](https://github.com/plamere/spotipy).
 
-The core of Spotifire is 
+The core of Spotifire is called OOSpotify. OOSpotify enables you to create objects for albums, artists, tracks, users, and playlists. Each object takes care of the calls to the Spotify Web API for you and deals with all of the parsing of the returned data. This allows for simplified calls with some fun functionality.
+
+Some examples:
+```python
+from OOSpotify import * 
+kanye = Artist('kanye west')
+kanye.TopTracks()
+```
+For some of that #oldkanye ...
+```python
+kanye.AlbumsBefore(2015)
+```
+For some of that #newkanye ...
+```python
+kanye.LatestAlbum()
+```
+The call above just prints out the latest album but doesn't actually retain the object for the album. To get that object we can do the following ...
+```python
+ghosts = kanye.getLatestAlbum()
+```
+We used the getLatestAlbum() method from the kanye object to create an object of class Album. The ghosts object now has all of our album info.
+To check out the tracks ...
+```python
+ghosts.Tracks() (or kanye.getLatestAlbum().Tracks(), or Artist('kanye west').getLatestAlbum().Tracks() --> OOP ftw)
+```
+Again, this call just prints out the tracks from the album, but doesn't retain objects for each track. 
+
+There's plenty more that can be done with OOSpotify. Check out [OOSpotify_Examples](https://github.com/zrachlin/spotifire/tree/master/OOSpotify/OOSpotify_Examples.ipynb) for an in-depth exploration.
+
 
 ## Setup 
 ### 1: Installation/Dependencies
@@ -57,50 +85,6 @@ If you don't know your Spotify User ID, here's how to find it using the mobile a
 
 <img src="https://github.com/zrachlin/spotifire/blob/master/images/Screenshot_20180722-122018_Spotify.jpg" alt="" width="275" height="550"> 
 
-4. Your User ID is what comes afer `user/` and before the question mark. It can be a string of numbers or text 
+4. Paste the link somewhere you can read it. Your User ID is what comes afer `user/` and before the question mark. It can be a string of numbers or text 
 
 <img src="https://github.com/zrachlin/spotifire/blob/master/images/Screenshot_20180722-122055_Samsung%20Notes.jpg" alt="" width="300" height="150">
-
-
-OOSpotify enables you to create objects for albums, artists, tracks, users, and playlists. Each object takes care of the calls to the Spotify Web API for you and deals with all of the parsing of the returned data. This allows for simplified calls with some fun functionality.
-
-Some examples:
-```python
-from OOSpotify import * 
-kanye = Artist('kanye west')
-kanye.TopTracks()
-```
-Returns:
-```
-0 -- All Mine
-1 -- Yikes
-2 -- Ghost Town
-3 -- Violent Crimes
-4 -- Wouldn't Leave
-5 -- I Thought About Killing You
-6 -- No Mistakes
-7 -- Lift Yourself
-8 -- Stronger
-9 -- FourFiveSeconds
-```
-For some of that #oldkanye ...
-```python
-kanye.AlbumsBefore(2015)
-```
-For some of that #newkanye ...
-```python
-kanye.LatestAlbum()
-```
-The call above just prints out the latest album but doesn't actually retain the object for the album. To get that object we can do the following ...
-```
-ghosts = kanye.getLatestAlbum()
-```
-We used the getLatestAlbum() method from the kanye object to create an object of class Album. The ghosts object now has all of our album info.
-To check out the tracks ...
-
-ghosts.Tracks() (or kanye.getLatestAlbum().Tracks(), or Artist('kanye west').getLatestAlbum().Tracks() --> OOP ftw)
-
-Again, this call just prints out the tracks from the album, but doesn't retain objects for each track. 
-
-There's plenty more that can be done with OOSpotify. Check out OOSpotify_Examples for an in-depth exploration.
-
