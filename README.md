@@ -11,6 +11,19 @@ from OOSpotify import *
 kanye = Artist('kanye west')
 kanye.TopTracks()
 ```
+Returns:
+ ```
+ 0 -- All Mine
+ 1 -- Yikes
+ 2 -- Ghost Town
+ 3 -- Violent Crimes
+ 4 -- Wouldn't Leave
+ 5 -- I Thought About Killing You
+ 6 -- No Mistakes
+ 7 -- Lift Yourself
+ 8 -- Stronger
+ 9 -- FourFiveSeconds
+ ```
 For some of that #oldkanye ...
 ```python
 kanye.AlbumsBefore(2015)
