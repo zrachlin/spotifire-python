@@ -1,6 +1,12 @@
 # :fire: Spotifire :fire:
-This project enables interaction with the Spotify Web API (https://developer.spotify.com/documentation/web-api/) through the use of Paul Lamere's spotipy library (https://github.com/plamere/spotipy).
+This project enables musical exploration, playlist creation, and deep learning via interaction with the Spotify Web API (https://developer.spotify.com/documentation/web-api/) through the use of Paul Lamere's spotipy library (https://github.com/plamere/spotipy).
 
+## Setup 
+### 1: Packages/Installation
+1. Clone this repository -> `git clone https://github.com/zrachlin/spotifire.git`
+Using Anaconda (https://www.anaconda.com/download) will give you most of what you need. 
+
+### 2: App Registration
 In order to enable some of the Web API functionality, you'll need to register an App through the Spotify Developers Console. It's pretty simple; here are the steps:
 1. Go to https://developer.spotify.com/dashboard/
 2. Log in to the dashboard with your spotify credentials
@@ -13,13 +19,21 @@ In order to enable some of the Web API functionality, you'll need to register an
 9. Under "Redirect URIs", enter http://google.com/
 10. Click "SAVE"
 11. Click the "SHOW CLIENT SECRET" button. Copy the Client ID and Client Secret.
-12. In OOSpotify.py, enter the following 
 
-os.environ['SPOTIPY_CLIENT_ID'] = 'your client id'
+### 3. Credentials
+Create a file named keys.py in the OOSpotify folder (`spotifire/OOSpotify/keys.py`) and paste in the following code and replace 'your client id' and 'your client secret' with your actual credentials from above:
 
-os.environ['SPOTIPY_CLIENT_SECRET'] = 'your client secret'
-
+```python
+import os
+os.environ['SPOTIPY_CLIENT_ID'] = 'Your Client ID'
+os.environ['SPOTIPY_CLIENT_SECRET'] = 'Your Client Secret'
 os.environ['SPOTIPY_REDIRECT_URI'] = 'http://google.com/'
+user = 'Your Spotify ID'
+```
+If you don't know your Spotify ID, here's how to find it using the mobile app:
+
+<img src="https://github.com/zrachlin/spotifire/blob/master/images/Screenshot_20180722-121942_Spotify.jpg" alt="" width="275" height="550"> <img src="https://github.com/zrachlin/spotifire/blob/master/images/Screenshot_20180722-121955_Spotify.jpg" alt="" width="275" height="550"> <img src="https://github.com/zrachlin/spotifire/blob/master/images/Screenshot_20180722-122018_Spotify.jpg" alt="" width="275" height="550"> <img src="https://github.com/zrachlin/spotifire/blob/master/images/Screenshot_20180722-122055_Samsung%20Notes.jpg" alt="" width="300" height="150">
+
 
 OOSpotify enables you to create objects for albums, artists, tracks, users, and playlists. Each object takes care of the calls to the Spotify Web API for you and deals with all of the parsing of the returned data. This allows for simplified calls with some fun functionality.
 
