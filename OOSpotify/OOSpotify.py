@@ -13,6 +13,7 @@ from operator import itemgetter
 from random import shuffle
 from keys import user
 
+# Setting authorization scope (see https://developer.spotify.com/documentation/general/guides/scopes/ for more info):
 scope = 'playlist-modify-private playlist-modify-public playlist-read-private playlist-read-collaborative user-library-read user-library-modify user-read-playback-state user-modify-playback-state user-read-currently-playing user-top-read'
 
 #alternative credential option:
@@ -478,8 +479,12 @@ class Playlist(SpotifyObj):
             features[feature] /= len(tracks)
         return features
         
-    def addTracks(self,SpotifyObjs):
+    def addTracks(self,SpotifyObjs,dedup=True):
         trackIDs = self._extractTrackIDs(SpotifyObjs)
+        if dedup:
+            # Remove duplicates
+            trackIDs = list(set(trackIDs))
+            
         # Split into list of lists with max length = 100 -> the API will only accept 100 at a time.
         maxIDs = 100
         splitTrackIDs = [trackIDs[i:i+maxIDs] for i in range(0,len(trackIDs),maxIDs)]
@@ -514,6 +519,7 @@ class User(object):
     
     Functional Methods:
         getPlaylists()
+        getPlaylist(playlistName)
         getSavedTracks() -> only works if you are requesting for yourself
         getTopTracks(limit=50,time_range='medium_term') -> only works if you are requesting for yourself
         getTopArtists(limit=50,time_range='medium_term') -> only works if you are requesting for yourself
@@ -521,6 +527,7 @@ class User(object):
     
     Printing Methods:
         Playlists()
+        Playlist(playlistName)
         SavedTracks() -> only works if you are requesting for yourself
         TopTracks(limit=50,time_range='medium_term') -> only works if you are requesting for yourself
         TopArtists(limit=50,time_range='medium_term') -> only works if you are requesting for yourself
@@ -551,12 +558,15 @@ class User(object):
     def Playlists(self):
         print('\n'.join('{}: {}'.format(i,j.name) for i,j in enumerate(self.getPlaylists())))
     
-    def findPlaylist(self,playlistName):
+    def getPlaylist(self,playlistName):
         pls = [i for i in self.getPlaylists() if i.name.lower() == playlistName.lower()]
         if len(pls) == 1:
             return pls[0]
         else:
             return pls
+    
+    def Playlist(self,playlistName):
+        print('\n'.join('{}. {} -- {}'.format(i,j.name,j.artist) for i,j in enumerate(self.getPlaylist(playlistName).getTracks())))
     
     def getSavedTracks(self):
         #only works if you are requesting your own saved tracks
