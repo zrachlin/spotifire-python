@@ -24,7 +24,7 @@ ghosts = kanye.getLatestAlbum()
 We used the getLatestAlbum() method from the kanye object to create an object of class Album. The ghosts object now has all of our album info.
 To check out the tracks ...
 ```python
-ghosts.Tracks() (or kanye.getLatestAlbum().Tracks(), or Artist('kanye west').getLatestAlbum().Tracks() --> OOP ftw)
+ghosts.Tracks() #or kanye.getLatestAlbum().Tracks(), or Artist('kanye west').getLatestAlbum().Tracks() --> OOP ftw
 ```
 Again, this call just prints out the tracks from the album, but doesn't retain objects for each track. 
 
