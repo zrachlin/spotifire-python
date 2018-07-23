@@ -50,7 +50,7 @@ There's plenty more that can be done with OOSpotify. Check out [OOSpotify_Exampl
 ### 1: Installation/Dependencies
 * Clone this repository -> `git clone https://github.com/zrachlin/spotifire.git`
 * Install [Spotipy](https://github.com/plamere/spotipy), courtesy of Paul Lamere -> `git clone https://github.com/plamere/spotipy.git` and install from source with `python setup.py install` (There are some API calls that haven't been included in the pip version yet)
-* Install [LyricWikia](https://github.com/enricobacis/lyricwikia), courtesy of Enrico Bacis -> `pip install lyricwikia`
+* Install [LyricsGenius](https://github.com/johnwmillr/LyricsGenius), courtesy of johnwmillr -> `pip install lyricsgenius`
 
 For [OOSpotify](https://github.com/zrachlin/spotifire/tree/master/OOSpotify), the following packages are needed. Using Anaconda (https://www.anaconda.com/download) should provide you with everything:
 * numpy
@@ -104,3 +104,8 @@ If you don't know your Spotify User ID, here's how to find it using the mobile a
 4. Paste the link somewhere you can read it. Your User ID is what comes afer `user/` and before the question mark. It can be a string of numbers or text 
 
 <img src="https://github.com/zrachlin/spotifire/blob/master/images/Screenshot_20180722-122055_Samsung%20Notes.jpg" alt="" width="300" height="150">
+
+If you would like to be able to search for track lyrics, you'll need to set up a Genius API Client and get the access token. You can do that [here](https://genius.com/api-clients). Once you've done that, copy the access token and enter it into your keys.py file like so:
+```python
+genius_token = 'Your Genius Client Access Token'
+```
