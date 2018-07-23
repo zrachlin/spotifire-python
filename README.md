@@ -49,8 +49,8 @@ There's plenty more that can be done with OOSpotify. Check out [OOSpotify_Exampl
 ## Setup 
 ### 1: Installation/Dependencies
 * Clone this repository -> `git clone https://github.com/zrachlin/spotifire.git`
-* Install [Spotipy](https://github.com/plamere/spotipy) -> `git clone https://github.com/plamere/spotipy.git` and install from source with `python setup.py install` (There are some API calls that haven't been included in the pip version yet)
-* Install [LyricWikia](https://github.com/enricobacis/lyricwikia) -> `pip install lyricwikia`
+* Install [Spotipy](https://github.com/plamere/spotipy), courtesy of Paul Lamere -> `git clone https://github.com/plamere/spotipy.git` and install from source with `python setup.py install` (There are some API calls that haven't been included in the pip version yet)
+* Install [LyricWikia](https://github.com/enricobacis/lyricwikia), courtesy of Enrico Bacis -> `pip install lyricwikia`
 
 For [OOSpotify](https://github.com/zrachlin/spotifire/tree/master/OOSpotify), the following packages are needed. Using Anaconda (https://www.anaconda.com/download) should provide you with everything:
 * numpy
