@@ -339,8 +339,11 @@ class Track(SpotifyObj):
     def _getFeatures(self):
         relevantFeatures = ['acousticness','danceability','energy','instrumentalness','key','liveness','loudness','mode','speechiness','tempo','time_signature','valence']
         sp = getSpotifyCreds(user,scope)
-        
-        features = sp.audio_features(self.id)[0]
+        try:
+            features = sp.audio_features(self.id)[0]
+        except:
+            # API errored out
+            features = {}
         if features:
             return {key:val for key,val in features.items() if key in relevantFeatures}
         else:
@@ -383,7 +386,7 @@ class Track(SpotifyObj):
             # This is a simple hack for when Spotify has an extended name for a track that Genius can't find.
             # For example, Track('let it be')'s full name is 'Let It Be - Remastered 2009'. If we remove everything
             # after the hyphen, Genius can find it. This may be risky if the song actually has a hypen in it.
-            simpler_name = self.name.split('-')[0]
+            simpler_name = self.name.split('-')[0].split('(')[0].strip()
             result = genius_api.search_song(simpler_name,self.artist,verbose=False)
             
             # The result is an object with more attributes than just the lyrics. More can be done with this 
@@ -476,6 +479,8 @@ class Playlist(SpotifyObj):
                 raise ValueError('You need the userID in addition to the playlistID')
         elif self.playlistDict:
             self._addAttributes(attDict=self.playlistDict)
+            self.userID = self.owner['id']
+            self.userName = self.owner['display_name']
     
     def getTracks(self,limit=None):
         sp = getSpotifyCreds(user,scope)
@@ -646,7 +651,7 @@ class User(object):
     def TopArtists(self,limit=50,time_range='medium_term'):
         print('\n'.join('{}. {}'.format(i,j.name) for i,j in enumerate(self.getTopArtists(limit=limit,time_range=time_range))))
         
-    def createPlaylist(self,playlistName):
+    def createPlaylist(self,playlistName,description=None):
         if self.id is not user:
             raise ValueError('You can only create playlists for yourself')
         
@@ -657,13 +662,17 @@ class User(object):
             if ans == 'y':
                 sp = getSpotifyCreds(user,scope)
                 sp.user_playlist_replace_tracks(user=self.id,playlist_id=dupPlaylists[0].id,tracks=[])
-                return Playlist(playlistDict=dupPlaylists[0].playlistDict)
+                result = Playlist(playlistDict=dupPlaylists[0].playlistDict)
             else:
                 return 'Exiting ...'
         else:
             sp = getSpotifyCreds(user,scope)
             plDict = sp.user_playlist_create(user=self.id,name=playlistName) #creates a new playlist and returns its dict
-            return Playlist(playlistDict=plDict)
+            result = Playlist(playlistDict=plDict)
+        if description:
+            sp.user_playlist_change_details(self.id,playlist_id=result.id,description=description)
+        return result
+        
 ################################################################################################################
 # General Functions
             
@@ -684,6 +693,11 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True
               min_time_signature = None,  max_time_signature = None,  target_time_signature = None,
                      min_valence = None,         max_valence = None,         target_valence = None):
     sp = getSpotifyCreds(user,scope)
+    
+    if prompt and not all([genres,artists,tracks,SpotifyObjs]): #only allow prompting if no inputs were given
+        # To Do: Step-by-step prompts for genres,artists, and track seeds and filters/bans
+        pass
+    
     genreSeeds = sp.recommendation_genre_seeds()['genres']
     invalids = '\n'.join('{} is an invalid genre'.format(g) for g in genres if g not in genreSeeds)
     if invalids:
@@ -693,10 +707,10 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True
         return
     
     seeds = []
-    seeds += [(g,'genre') for g in genres]
-    seeds += [(Artist(a).id,'artist') for a in artists]
-    seeds += [(Track(t).id,'track') for t in tracks]
-    seeds += [(t.id,'track') for t in extractTracks(SpotifyObjs)]
+    seeds += [(g,'Genres') for g in genres]
+    seeds += [(Artist(a),'Artists') for a in artists]
+    seeds += [(Track(t),'Tracks') for t in tracks]
+    seeds += [(t,'Tracks') for t in extractTracks(SpotifyObjs)]
     
     # The maximum # of seeds you can send to the API for recommendations at one time is 5. We'll split the requested
     # seeds into groups of 5 and then combine the results later, which allows us to take in as many seeds as desired.
@@ -709,14 +723,20 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True
     if includeSeedTracks:
         rawRecTrackDicts += [Track(t).trackDict for t in tracks]
     
+    g = []
+    a = []
+    t = []
     for seeds in splitSeeds:
         sp = getSpotifyCreds(user,scope)
-        artists = [item[0] for item in seeds if item[1]=='artist']
-        tracks = [item[0] for item in seeds if item[1]=='track']
-        genres = [item[0] for item in seeds if item[1]=='genre']
-        recs = sp.recommendations(seed_artists = [a for a in artists],
-                                  seed_tracks  = [t for t in tracks],
-                                  seed_genres  = [g for g in genres],limit=100,
+        Genres = [item[0] for item in seeds if item[1]=='Genres']
+        g += Genres
+        Artists = [item[0] for item in seeds if item[1]=='Artists']
+        a += Artists
+        Tracks = [item[0] for item in seeds if item[1]=='Tracks']
+        t += Tracks
+        recs = sp.recommendations(seed_artists = [a.id for a in Artists],
+                                  seed_tracks  = [t.id for t in Tracks],
+                                  seed_genres  = [g for g in Genres],limit=100,
                                   min_acousticness = min_acousticness,max_acousticness = max_acousticness,target_acousticness = target_acousticness,
                                   min_danceability = min_danceability,max_danceability = max_danceability,target_danceability = target_danceability,
                                    min_duration_ms = min_duration_ms,max_duration_ms = max_duration_ms,target_duration_ms = target_duration_ms,
@@ -759,8 +779,21 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True
     if banned_artists:
         banned_artists = [Artist(i).name for i in banned_artists]
         recTracks = [i for i in recTracks if i.artist not in banned_artists]
+    
+    # Display Playlist
     print('\n'.join('{} -- {}'.format(i.name,i.artist) for i in recTracks))
-    return recTracks
+    
+    # Add description of playlist
+    description = ''
+    if g:
+        description += 'Genres: [{}]'.format(', '.join([i.title() for i in g]))
+    if a:
+        description += ' Artists: [{}]'.format(', '.join([i.name for i in a]))
+    if t:
+        description += ' Tracks: [{}]'.format(', '.join([i.name for i in t]))
+    
+    result = [recTracks,description.strip()]
+    return result
 
 def orderbyFeatures(SpotifyObjs,features):
     tracks = extractTracks(SpotifyObjs)
