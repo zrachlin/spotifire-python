@@ -380,12 +380,21 @@ class Track(SpotifyObj):
         genius_api = genius.Genius(genius_token)
         result = genius_api.search_song(self.name,self.artist,verbose=False)
         if not result:
+            # This is a simple hack for when Spotify has an extended name for a track that Genius can't find.
+            # For example, Track('let it be')'s full name is 'Let It Be - Remastered 2009'. If we remove everything
+            # after the hyphen, Genius can find it. This may be risky if the song actually has a hypen in it.
             simpler_name = self.name.split('-')[0]
             result = genius_api.search_song(simpler_name,self.artist,verbose=False)
+            
+            # The result is an object with more attributes than just the lyrics. More can be done with this 
+            # in the future, like getting the youtube link or links to info about the songwriters.
         return result
+    
     def Lyrics(self):
         lyrics = self.getLyrics()
         if lyrics:
+            print('Lyrics for {} by {}'.format(self.name,self.artist))
+            print('-----------------------------------')
             print(lyrics.lyrics)
         else:
             print('Could not find lyrics')
@@ -658,7 +667,8 @@ class User(object):
 ################################################################################################################
 # General Functions
             
-def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True,prompt=False,
+def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True,banned_artists=[],banned_tracks=[],
+            prompt=False,
                 min_acousticness = None,    max_acousticness = None,    target_acousticness = None,
                 min_danceability = None,    max_danceability = None,    target_danceability = None,
                  min_duration_ms = None,     max_duration_ms = None,     target_duration_ms = None,
@@ -741,6 +751,14 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True
     
     # Create Track Objects:
     recTracks = [Track(trackDict=i) for i in recTrackDicts]
+    
+    # Remove Banned Artists and Tracks:
+    if banned_tracks:
+        banned_tracks = [Track(i).name for i in banned_tracks]
+        recTracks = [i for i in recTracks if i.name not in banned_tracks]
+    if banned_artists:
+        banned_artists = [Artist(i).name for i in banned_artists]
+        recTracks = [i for i in recTracks if i.artist not in banned_artists]
     print('\n'.join('{} -- {}'.format(i.name,i.artist) for i in recTracks))
     return recTracks
 
