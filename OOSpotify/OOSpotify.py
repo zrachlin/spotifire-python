@@ -85,8 +85,18 @@ class SpotifyObj(object):
             attDict = self._getDict()
             setattr(self,self.type+'Dict',attDict)
         for key,val in attDict.items():
-            self.__dict__[key] = val  
-
+            self.__dict__[key] = val
+    
+    def saveItem(self):
+        # Not sure if putting it here is the best place. Other option is in the User object
+        sp = getSpotifyCreds(user,scope)
+        trackIDs = [self.id] if self.type=='track' else [i.id for i in self.getTracks()]
+        alreadySaved = sp.current_user_saved_tracks_contains(tracks=trackIDs) #check if the tracks are already saved
+        print('\n'.join("'{}' is already saved".format(Track(ID=i).name) for i,j in zip(trackIDs,alreadySaved) if j))
+        newIDs = [i for i,j in zip(trackIDs,alreadySaved) if not j]
+        if newIDs:
+            sp.current_user_saved_tracks_add(tracks=newIDs)
+        
 class Artist(SpotifyObj):
     '''
     Artist class for OOSpotify. Inherits functionality from the SpotifyObj Class.
@@ -132,7 +142,6 @@ class Artist(SpotifyObj):
         self.artistDict = artistDict
         self._addAttributes(attDict=artistDict)
         
-    
     def getTopTracks(self):
         #Returns a list of dictionaries of tracks
         #not implemented: top tracks by a specific country
@@ -142,6 +151,11 @@ class Artist(SpotifyObj):
     
     def TopTracks(self):
         print('\n'.join('{}. {}'.format(i,j.name) for i,j in enumerate(self.getTopTracks())))
+    
+    def getTracks(self):
+        result = self.getTopTracks()
+        print('Using top {} tracks for artist {}'.format(len(result),self.name))
+        return result
     
     def getRelatedArtists(self):
         sp = getSpotifyCreds(user,scope)
@@ -510,7 +524,10 @@ class Playlist(SpotifyObj):
         return features
         
     def addTracks(self,SpotifyObjs,dedup=True):
-        trackIDs = self._extractTrackIDs(SpotifyObjs)
+        if type(SpotifyObjs) is not list:
+            SpotifyObjs = [SpotifyObjs]
+        listoflists = [[i] if i.type=='track' else i.getTracks() for i in SpotifyObjs]
+        trackIDs = [i.id for group in listoflists for i in group]
         if dedup:
             # Remove duplicates
             trackIDs = list(set(trackIDs))
@@ -521,25 +538,6 @@ class Playlist(SpotifyObj):
         for trackIDs in splitTrackIDs:
             sp = getSpotifyCreds(user,scope)
             sp.user_playlist_add_tracks(user=user,playlist_id=self.id,tracks=trackIDs)
-    
-    def _extractTrackIDs(self,SpotifyObjs):
-        if type(SpotifyObjs) is not list:
-            SpotifyObjs = [SpotifyObjs]
-        trackList = []
-        for obj in SpotifyObjs:
-            if obj.type == 'track':
-                trackList.append(obj)
-            elif obj.type == 'artist':
-                tracks = obj.getTopTracks()
-                trackList += tracks
-                print('Using top {} tracks for artist {}'.format(len(tracks),obj.name))
-            elif obj.type in ['playlist','album']:
-                tracks = obj.getTracks()
-                trackList += tracks
-            else:
-                raise ValueError('{} is an invalid object class'.format(obj))
-        return [t.id for t in trackList]
-    
  
 class User(object):
     '''
@@ -672,6 +670,24 @@ class User(object):
         if description:
             sp.user_playlist_change_details(self.id,playlist_id=result.id,description=description)
         return result
+    
+    def recPlaylist(self,playlistName,recList):
+        # Combines creating a playlist and adding tracks and description into one method
+        self.createPlaylist(playlistName,description=recList[1]).addTracks(recList[0])
+    
+    def getPlayingTrack(self):
+        sp = getSpotifyCreds(user,scope)
+        result = sp.currently_playing()
+        if result:
+            result = Track(trackDict=result['item'])
+        else:
+            print('Nothing is currently playing')
+        return result
+     
+    def PlayingTrack(self):
+        track = self.getPlayingTrack()
+        if track:
+            print('{} -- {}'.format(track.name,track.artist))
         
 ################################################################################################################
 # General Functions
@@ -793,6 +809,8 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True
         description += ' Tracks: [{}]'.format(', '.join([i.name for i in t]))
     
     result = [recTracks,description.strip()]
+    
+    print('\nTotal Tracks: {}'.format(len(recTracks)))
     return result
 
 def orderbyFeatures(SpotifyObjs,features):
