@@ -677,17 +677,42 @@ class User(object):
     
     def getPlayingTrack(self):
         sp = getSpotifyCreds(user,scope)
-        result = sp.currently_playing()
+        result = sp.current_playback() #there's also sp.currently_playing() and sp.current_user_playing_track(), but this has the most info
         if result:
-            result = Track(trackDict=result['item'])
+            if result['context']:
+                sType = result['context']['type']
+                sID = result['context']['uri'].split(':')[-1]
+                if sType == 'playlist':
+                    userID = result['context']['uri'].split(':')[2]
+                    source = Playlist(ID=sID,userID=userID)
+                elif sType == 'album':
+                    source = Album(ID=sID)
+                elif sType == 'artist':
+                    source = Artist(ID=sID)
+                else:
+                    raise ValueError("Can't deal with this type yet")
+            else:
+                source = None
+            result = [Track(trackDict=result['item']),source]
         else:
             print('Nothing is currently playing')
         return result
      
     def PlayingTrack(self):
-        track = self.getPlayingTrack()
+        [track,source] = self.getPlayingTrack()
         if track:
-            print('{} -- {}'.format(track.name,track.artist))
+            if source:
+                if source.type == 'artist':
+                    filler = 'top tracks of'
+                    name = source.name
+                else:
+                    filler = source.type
+                    name = "'{}'".format(source.name)
+                    
+                print("'{}' by {}".format(track.name,track.artist))
+                print("(From the {} {})".format(filler,name))
+            else:
+                print("'{}' by {}".format(track.name,track.artist))
         
 ################################################################################################################
 # General Functions
