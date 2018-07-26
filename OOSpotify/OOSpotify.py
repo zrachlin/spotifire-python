@@ -694,13 +694,16 @@ class User(object):
                     raise ValueError("Can't deal with this type yet")
             else:
                 source = None
-            result = [Track(trackDict=result['item']),source]
+            
+            result = Track(trackDict=result['item'])
+            result.source = source
         else:
             print('Nothing is currently playing')
         return result
      
     def PlayingTrack(self):
-        [track,source] = self.getPlayingTrack()
+        track = self.getPlayingTrack()
+        source = track.source
         if track:
             if source:
                 if source.type == 'artist':
