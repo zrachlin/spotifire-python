@@ -489,6 +489,7 @@ class Playlist(SpotifyObj):
                 sp = getSpotifyCreds(user,scope)
                 self.playlistDict = sp.user_playlist(self.userID,self.id)
                 self._addAttributes(attDict=self.playlistDict)
+                self.userName = self.owner['display_name']
             else:
                 raise ValueError('You need the userID in addition to the playlistID')
         elif self.playlistDict:
@@ -705,9 +706,14 @@ class User(object):
                 if source.type == 'artist':
                     filler = 'top tracks of'
                     name = source.name
-                else:
+                elif source.type == 'album':
                     filler = source.type
                     name = "'{}'".format(source.name)
+                elif source.type == 'playlist':
+                    filler = source.type
+                    name = "'{}' created by {}".format(source.name,source.userName)
+                else:
+                    raise ValueError("Can't deal with this type yet")
                     
                 print("'{}' by {}".format(track.name,track.artist))
                 print("(From the {} {})".format(filler,name))
