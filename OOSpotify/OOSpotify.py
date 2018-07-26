@@ -539,6 +539,34 @@ class Playlist(SpotifyObj):
         for trackIDs in splitTrackIDs:
             sp = getSpotifyCreds(user,scope)
             sp.user_playlist_add_tracks(user=user,playlist_id=self.id,tracks=trackIDs)
+
+class Episode(SpotifyObj):
+    '''
+    Episode class for OOSpotify. Inherits functionality from the SpotifyObj class.
+    '''
+    
+    def __init__(self,name=None,ID=None,episodeDict=None):
+        self.type = 'episode'
+        if not any([name,ID,episodeDict]):
+            raise ValueError('You have to enter either the track name, the track ID, or the track dictionary')
+        self.name = name
+        self.id = ID
+        self.episodeDict = episodeDict
+        self._addAttributes(attDict=episodeDict)
+
+class Podcast(SpotifyObj):
+    '''
+    Podcast class for OOSpotify. Inherits functionality from the SpotifyObj class.
+    '''
+    
+    def __init__(self,name=None,ID=None,podcastDict=None):
+        self.type = 'show'
+        if not any([name,ID,podcastDict]):
+            raise ValueError('You have to enter either the track name, the track ID, or the track dictionary')
+        self.name = name
+        self.id = ID
+        self.podcastDict = podcastDict
+        self._addAttributes(attDict=podcastDict)
  
 class User(object):
     '''
