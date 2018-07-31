@@ -90,6 +90,10 @@ class SpotifyObj(object):
         else:
             result = "You've already saved this."
         return result
+
+    def startPlayback(self,devID):
+        sp = getSpotifyCreds(user,scope)
+        sp.start_playback(device_id=devID,context_uri=self.uri)
         
 class Artist(SpotifyObj):
     '''
@@ -748,6 +752,11 @@ class User(object):
                 print("(From the {} {})".format(filler,name))
             else:
                 print("'{}' by {}".format(track.name,track.artist))
+    
+    def getDevices(self):
+        sp = getSpotifyCreds(user,scope)
+        devices = sp.devices()['devices']
+        return devices
         
 ################################################################################################################
 # General Functions
