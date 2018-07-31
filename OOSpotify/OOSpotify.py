@@ -787,7 +787,7 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True
     seeds += [(Artist(a),'Artists') for a in artists]
     seeds += [(Track(t),'Tracks') for t in tracks]
     seeds += [(t,'Tracks') for t in extractTracks(SpotifyObjs)]
-    
+    seeds = list(set(seeds))
     # The maximum # of seeds you can send to the API for recommendations at one time is 5. We'll split the requested
     # seeds into groups of 5 and then combine the results later, which allows us to take in as many seeds as desired.
     maxSeeds = 5
