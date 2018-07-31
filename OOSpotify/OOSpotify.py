@@ -93,7 +93,10 @@ class SpotifyObj(object):
 
     def startPlayback(self,devID):
         sp = getSpotifyCreds(user,scope)
-        sp.start_playback(device_id=devID,context_uri=self.uri)
+        if self.type == 'track':
+            sp.start_playback(device_id=devID,uris=[self.uri])
+        else:
+            sp.start_playback(device_id=devID,context_uri=self.uri)
         
 class Artist(SpotifyObj):
     '''
