@@ -53,16 +53,6 @@ class SpotifyObj(object):
         self.type = ''
         self.id = ''
         self.name = ''
-# Not really needed -> the sp.search returns the dictionary anyway, so removing this saves an API call
-#    def _getID(self):
-#        sp = getSpotifyCreds(user,scope)
-#        result = sp.search(q=self.name,type=self.type,limit=1)
-#        return result[self.type+'s']['items'][0]['id']
-#    
-#    def _getInfo(self):
-#            sp = getSpotifyCreds(user,scope)
-#            apiCall = getattr(sp,self.type) #makes the actual call to the Spotify Web API
-#            return apiCall(self.id)
     
     def _getDict(self):
         sp = getSpotifyCreds(user,scope)
@@ -96,6 +86,10 @@ class SpotifyObj(object):
         newIDs = [i for i,j in zip(trackIDs,alreadySaved) if not j]
         if newIDs:
             sp.current_user_saved_tracks_add(tracks=newIDs)
+            result = "Saved it to your music."
+        else:
+            result = "You've already saved this."
+        return result
         
 class Artist(SpotifyObj):
     '''
@@ -567,6 +561,10 @@ class Podcast(SpotifyObj):
         self.id = ID
         self.podcastDict = podcastDict
         self._addAttributes(attDict=podcastDict)
+    
+    def getEpisodes(self):
+        #there currently isn't a spotipy function to get episodes from a podcast
+        pass
  
 class User(object):
     '''
@@ -906,3 +904,7 @@ def extractTracks(SpotifyObjs):
                 raise ValueError('{} is an invalid object class'.format(obj))
         return trackList
     
+def availableGenreSeeds():
+    sp = getSpotifyCreds(user,scope)
+    genreSeeds = sp.recommendation_genre_seeds()['genres']
+    return genreSeeds
