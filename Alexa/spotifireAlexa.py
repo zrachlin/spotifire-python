@@ -90,14 +90,16 @@ def createPlaylist(s_one,s_two,s_three,playlistName):
         #message = 'i heard {},{},{}'.format(genres,artists,tracks)
         #message = '{},{},{}'.format(request.intent.slots.genres['value'],request.intent.slots.artists['value'],request.intent.slots.tracks['value'])
         
+        elicit_slot('filters','Would you like any filters?')
+        
+        recs = getRecs(genres=genres,artists=artists,tracks=tracks)
         if not request.intent.slots.playlistName.value:
             return elicit_slot('playlistName','What would you like to name your playlist?')
-        recs = getRecs(genres=genres,artists=artists,tracks=tracks)
         pl = u.recPlaylist(playlistName,recs)
-        echo_devID = [i['id'] for i in u.getDevices() if i['name'] == "Zach's Echo Dot"][0]
-        pl.startPlayback(echo_devID)
+#        echo_devID = [i['id'] for i in u.getDevices() if i['name'] == "Zach's Echo Dot"][0]
+#        pl.startPlayback(echo_devID)
         
-    return statement('made your playlist: {},{},{}'.format(genres,artists,tracks))
+    return statement('Made your playlist called {} with the following seeds: {},{},{}'.format(playlistName,genres,artists,tracks))
 
 @ask.intent('getSeedsIntent')
 def getSeeds():
