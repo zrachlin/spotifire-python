@@ -11,6 +11,7 @@ import spotipy.util as util
 import time
 from operator import itemgetter
 from random import shuffle
+import pandas as pd
 import lyricsgenius as genius
 from keys import user,genius_token
 
@@ -897,6 +898,29 @@ def orderbyFeatures(SpotifyObjs,features):
     for i,t in enumerate(tracks):
         fstring = ', '.join('{}: {}'.format(f,t.features[f]) for f in features)
         print('{}. {} -- {} --> {}'.format(i,t.name,t.artist,fstring))
+
+def featureComp(SpotifyObjs,features='all',visual='plot'):
+    data = []
+    if type(SpotifyObjs) is not list:
+            SpotifyObjs = [SpotifyObjs]
+    featureNames = list(SpotifyObjs[0].features.keys() if SpotifyObjs[0].type == 'track' else SpotifyObjs[0].AvgFeatures().keys())
+    for obj in SpotifyObjs:
+        if obj.type == 'track':
+            features = [val for key,val in obj.features.items()]
+            data.append([obj.name,obj.type]+features)
+        elif obj.type in ['album','artist','playlist']:
+            features = [val for key,val in obj.AvgFeatures().items()]
+            data.append([obj.name,obj.type]+features)
+        else:
+            #invalid type
+            pass
+    df =  pd.DataFrame(data,columns=['name','type']+featureNames)
+    
+    ax=df[[i for i in list(df)[2:] if i not in ['key','tempo','loudness','time_signature','Name']]].plot(style='-o',figsize=(10,5))
+    ax.set_xticks(df.index)
+    ax.set_xticklabels(df.name,rotation=90)
+    ax.legend(bbox_to_anchor=(1.05,1))
+    return df
 
 def extractTracks(SpotifyObjs):
         if type(SpotifyObjs) is not list:
