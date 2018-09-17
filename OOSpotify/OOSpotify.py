@@ -168,7 +168,8 @@ class Artist(SpotifyObj):
         for artist in self.getRelatedArtists():
             print(artist.name)
     
-    def getAlbums(self,desc_order=True):
+    def getAlbums(self,desc_order=True,inc_all=False):
+        #if inc_all is set to True, this will include all types of albums, including singles and collections
         sp = getSpotifyCreds(user,scope)
         albums = sp.artist_albums(self.id,limit=50)
         albs = []
@@ -183,7 +184,9 @@ class Artist(SpotifyObj):
         unique_names = set()  # skip duplicate albums
         for album in albs:
             name = album['name'].lower()
-            if not name in unique_names and album['album_group'] == 'album':  
+            if not name in unique_names:
+                if not inc_all and album['album_type'] is not 'album':  
+                    continue
                 unique_names.add(name)
                 result.append(Album(albumDict=album))
         
@@ -191,8 +194,8 @@ class Artist(SpotifyObj):
         result = sorted(result,key=lambda album: album.dateStruct(),reverse=desc_order)
         return result
 
-    def Albums(self):
-        for i,album in enumerate(self.getAlbums()):
+    def Albums(self,inc_all=False):
+        for i,album in enumerate(self.getAlbums(inc_all=inc_all)):
             print('{}: {} -- {}'.format(i,album.name,album.release_date))
     
     def getLatestAlbum(self):
@@ -868,7 +871,10 @@ def getRecs(genres=[],artists=[],tracks=[],SpotifyObjs=[],includeSeedTracks=True
     if banned_artists:
         banned_artists = [Artist(i).name for i in banned_artists]
         recTracks = [i for i in recTracks if i.artist not in banned_artists]
-    
+
+# to do: release-date filter:
+#    if before:
+        
     # Display Playlist
     print('\n'.join('{} -- {}'.format(i.name,i.artist) for i in recTracks))
     
@@ -899,7 +905,7 @@ def orderbyFeatures(SpotifyObjs,features):
         fstring = ', '.join('{}: {}'.format(f,t.features[f]) for f in features)
         print('{}. {} -- {} --> {}'.format(i,t.name,t.artist,fstring))
 
-def featureComp(SpotifyObjs,features='all',visual='plot'):
+def featureComp(SpotifyObjs,feat='all',visual='plot'):
     data = []
     if type(SpotifyObjs) is not list:
             SpotifyObjs = [SpotifyObjs]
@@ -915,8 +921,11 @@ def featureComp(SpotifyObjs,features='all',visual='plot'):
             #invalid type
             pass
     df =  pd.DataFrame(data,columns=['name','type']+featureNames)
-    
-    ax=df[[i for i in list(df)[2:] if i not in ['key','tempo','loudness','time_signature','Name']]].plot(style='-o',figsize=(10,5))
+    if feat == 'all':
+        ax=df[[i for i in list(df)[2:] if i not in ['key','tempo','loudness','time_signature','Name']]].plot(style='-o',figsize=(10,5))
+    else:
+        feat = [feat] if type(feat) is not list else feat
+        ax=df[[i for i in list(df)[2:] if i in feat]].plot(style='-o',figsize=(10,5))
     ax.set_xticks(df.index)
     ax.set_xticklabels(df.name,rotation=90)
     ax.legend(bbox_to_anchor=(1.05,1))
