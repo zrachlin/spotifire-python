@@ -184,8 +184,8 @@ class Artist(SpotifyObj):
         unique_names = set()  # skip duplicate albums
         for album in albs:
             name = album['name'].lower()
-            if not name in unique_names:
-                if not inc_all and album['album_type'] is not 'album':  
+            if name not in unique_names:
+                if not inc_all and album['album_group'] != 'album':  
                     continue
                 unique_names.add(name)
                 result.append(Album(albumDict=album))
@@ -196,27 +196,27 @@ class Artist(SpotifyObj):
 
     def Albums(self,inc_all=False):
         for i,album in enumerate(self.getAlbums(inc_all=inc_all)):
-            print('{}: {} -- {}'.format(i,album.name,album.release_date))
+            print('{}: {} -- {} ({})'.format(i,album.name,album.release_date,album.album_group))
     
-    def getLatestAlbum(self):
-        dateTuple = [(i,i.dateStruct()) for i in self.getAlbums()]
+    def getLatestAlbum(self,inc_all=False):
+        dateTuple = [(i,i.dateStruct()) for i in self.getAlbums(inc_all=inc_all)]
         return max(dateTuple,key=itemgetter(1))[0]
     
-    def LatestAlbum(self):
-        alb = self.getLatestAlbum()
-        print('{}: {}'.format(alb.name,alb.release_date))
+    def LatestAlbum(self,inc_all=False):
+        alb = self.getLatestAlbum(inc_all=inc_all)
+        print('{}: {} ({})'.format(alb.name,alb.release_date,alb.album_group))
     
-    def getAlbumsBefore(self,year):
-        return [i for i in self.getAlbums() if i.dateStruct()<time.strptime(str(year),'%Y')]
+    def getAlbumsBefore(self,year,inc_all=False):
+        return [i for i in self.getAlbums(inc_all=inc_all) if i.dateStruct()<time.strptime(str(year),'%Y')]
     
-    def AlbumsBefore(self,year):
-        print('\n'.join('{} - {}'.format(i.name,i.release_date) for i in self.getAlbumsBefore(year)))
+    def AlbumsBefore(self,year,inc_all=False):
+        print('\n'.join('{} - {} ({})'.format(i.name,i.release_date,i.album_group) for i in self.getAlbumsBefore(year,inc_all)))
     
-    def getAlbumsAfter(self,year):
-        return [i for i in self.getAlbums() if i.dateStruct()>=time.strptime(str(year),'%Y')]
+    def getAlbumsAfter(self,year,inc_all=False):
+        return [i for i in self.getAlbums(inc_all=inc_all) if i.dateStruct()>=time.strptime(str(year),'%Y')]
     
-    def AlbumsAfter(self,year):
-        print('\n'.join('{} - {}'.format(i.name,i.release_date) for i in self.getAlbumsAfter(year)))
+    def AlbumsAfter(self,year,inc_all=False):
+        print('\n'.join('{} - {} ({})'.format(i.name,i.release_date,i.album_group) for i in self.getAlbumsAfter(year,inc_all)))
     
     def AvgFeatures(self):
         #averages features from top tracks. this could also be from x albums or something else
